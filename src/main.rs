@@ -43,8 +43,8 @@ fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, image: &mut tga::Image, color: 
     let dx = x1 - x0;
     let dy = y1 - y0;
 
-    let derror = (dy as f32 / dx as f32).abs();
-    let mut error = 0_f32;
+    let derror = (dy * 2).abs();
+    let mut error = 0;
     let mut y = y0;
 
     for x in x0..=x1 {
@@ -57,9 +57,9 @@ fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, image: &mut tga::Image, color: 
 
         error += derror;
 
-        if error > 0.5 {
+        if error > dx {
             y += if y1 > y0 { 1 } else { -1 };
-            error -= 1.0;
+            error -= dx * 2;
         }
     }
 }
