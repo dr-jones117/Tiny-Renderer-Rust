@@ -40,14 +40,26 @@ fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, image: &mut tga::Image, color: 
         (x0, y0, x1, y1)
     };
 
-    for x in x0..x1 {
-        let t = (x - x0) as f32 / (x1 - x0) as f32;
-        let y = (y0 as f32 * (1.0 - t)) + (y1 as f32 * t);
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+
+    let derror = (dy as f32 / dx as f32).abs();
+    let mut error = 0_f32;
+    let mut y = y0;
+
+    for x in x0..=x1 {
         if steep {
             // detranspose the image
             image.set(y as u16, x as u16, color);
         } else {
             image.set(x as u16, y as u16, color);
+        }
+
+        error += derror;
+
+        if error > 0.5 {
+            y += if y1 > y0 { 1 } else { -1 };
+            error -= 1.0;
         }
     }
 }
