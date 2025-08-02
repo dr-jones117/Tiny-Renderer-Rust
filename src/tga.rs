@@ -1,0 +1,134 @@
+use bytemuck::{Pod, Zeroable}; //TODO : what does this do?
+use std::{fs::File, io::Write, path::Path};
+
+pub struct Color(pub u8, pub u8, pub u8, pub u8);
+
+#[derive(Debug)]
+pub enum ColorType {
+    RGB,
+    GrayScale,
+    RGBA,
+}
+
+#[derive(Debug)]
+pub enum ImageType {
+    UncompressedTrueColor,
+    UncompressedGrayScale,
+    RleTrueColor,
+    RleGrayScale,
+}
+
+impl ImageType {
+    fn get_value(&self) -> u8 {
+        match self {
+            ImageType::UncompressedTrueColor => 2,
+            ImageType::UncompressedGrayScale => 3,
+            ImageType::RleTrueColor => 10,
+            ImageType::RleGrayScale => 11,
+        }
+    }
+}
+
+impl ColorType {
+    fn bytes_per_pixel(&self) -> u8 {
+        match self {
+            ColorType::GrayScale => 1,
+            ColorType::RGB => 3,
+            ColorType::RGBA => 4,
+        }
+    }
+}
+
+#[repr(C, packed)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+pub struct Header {
+    id_length: u8,
+    color_map_type: u8,
+    image_type: u8,
+    cm_first_entry_index: u16,
+    cm_length: u16,
+    cm_entry_size: u8,
+    x_origin: u16,
+    y_origin: u16,
+    width: u16,
+    height: u16,
+    bits_per_pixel: u8,
+    image_descriptor: u8,
+}
+
+impl Header {
+    pub fn new(width: u16, height: u16, image_type: &ImageType, color_type: &ColorType) -> Header {
+        Header {
+            id_length: 0,
+            color_map_type: 0,
+            image_type: image_type.get_value(),
+            cm_first_entry_index: 0,
+            cm_length: 0,
+            cm_entry_size: 0,
+            x_origin: 0,
+            y_origin: 0,
+            width,
+            height,
+            bits_per_pixel: color_type.bytes_per_pixel() * 8,
+            image_descriptor: 0,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Image {
+    color_type: ColorType,
+    header: Header,
+    data: Vec<u8>,
+}
+
+impl Image {
+    pub fn new(width: u16, height: u16, image_type: ImageType, color_type: ColorType) -> Image {
+        let data_length = (width * height * color_type.bytes_per_pixel() as u16) as usize;
+        Image {
+            header: Header::new(width, height, &image_type, &color_type),
+            color_type,
+            data: vec![0; data_length],
+        }
+    }
+
+    pub fn set(&mut self, x: u16, y: u16, color: &Color) -> bool {
+        let width = self.width();
+        let height = self.height();
+
+        if self.data.is_empty() || x >= width || y >= height {
+            return false;
+        }
+
+        let bpp = self.color_type.bytes_per_pixel() as usize;
+        let start = (x + y * width) as usize * bpp;
+        let color = vec![color.0, color.1, color.2, color.3];
+
+        let to = &mut self.data[start..start + bpp];
+        let from = &color[0..bpp];
+        to.copy_from_slice(from);
+
+        true
+    }
+
+    pub fn write_to_file(&self, name: &str) -> std::io::Result<()> {
+        let path = Path::new(name);
+        let mut file = match File::create(&path) {
+            Ok(file) => file,
+            Err(_) => panic!("Error opening file"),
+        };
+
+        let header: &[u8] = bytemuck::bytes_of(&self.header); // TODO: How does bytemuck work?
+        file.write_all(header)?;
+        file.write_all(&self.data[..])?;
+        Ok(())
+    }
+
+    fn width(&self) -> u16 {
+        self.header.width
+    }
+
+    fn height(&self) -> u16 {
+        self.header.height
+    }
+}
