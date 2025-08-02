@@ -84,7 +84,8 @@ pub struct Image {
 
 impl Image {
     pub fn new(width: u16, height: u16, image_type: ImageType, color_type: ColorType) -> Image {
-        let data_length = (width * height * color_type.bytes_per_pixel() as u16) as usize;
+        let data_length =
+            (width as u32 * height as u32 * color_type.bytes_per_pixel() as u32) as usize;
         Image {
             header: Header::new(width, height, &image_type, &color_type),
             color_type,
@@ -101,12 +102,21 @@ impl Image {
         }
 
         let bpp = self.color_type.bytes_per_pixel() as usize;
-        let start = (x + y * width) as usize * bpp;
-        let color = vec![color.0, color.1, color.2, color.3];
+        let start = (x as u32 + y as u32 * width as u32) as usize * bpp;
 
-        let to = &mut self.data[start..start + bpp];
-        let from = &color[0..bpp];
-        to.copy_from_slice(from);
+        match self.color_type {
+            ColorType::GrayScale => {
+                panic!("unimplemented GrayScale in tga image set");
+            }
+            ColorType::RGB => {
+                self.data[start] = color.2;
+                self.data[start + 1] = color.1;
+                self.data[start + 2] = color.0;
+            }
+            ColorType::RGBA => {
+                panic!("unimplemented RGBA in tga image set");
+            }
+        }
 
         true
     }
