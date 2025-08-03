@@ -1,24 +1,14 @@
+mod model;
 mod tga;
+use std::env;
 
 fn main() {
-    let white = tga::Color(255, 255, 255, 255);
-    let red = tga::Color(255, 0, 0, 255);
-    let orange = tga::Color(150, 100, 50, 255);
-
-    let mut image = tga::Image::new(
-        100,
-        100,
-        tga::ImageType::UncompressedTrueColor,
-        tga::ColorType::RGB,
-    );
-
-    draw_line(13, 20, 80, 40, &mut image, &white);
-    draw_line(20, 13, 40, 80, &mut image, &red);
-    draw_line(80, 40, 13, 20, &mut image, &orange);
-
-    match image.write_to_file("test.tga") {
-        Ok(()) => (),
-        Err(why) => panic!("Error writing image to file: {}", why),
+    let args: Vec<String> = env::args().collect();
+    let model: model::Model;
+    if args.len() == 2 {
+        model = model::Model::new(args[1].as_str());
+    } else {
+        panic!("not implemented");
     }
 }
 
