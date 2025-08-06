@@ -1,18 +1,23 @@
-mod model;
 mod tga;
-use std::env;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let model: model::Model;
-    if args.len() == 2 {
-        model = model::Model::new(args[1].as_str());
-    } else {
-        panic!("not implemented");
+    let color = tga::Color(150, 100, 50, 255);
+
+    let mut image = tga::Image::new(
+        100,
+        100,
+        tga::ImageType::UncompressedTrueColor,
+        tga::ColorType::RGB,
+    );
+
+    draw_line(80, 40, 13, 20, &mut image, &color);
+
+    match image.write_to_file("test.tga") {
+        Ok(()) => (),
+        Err(why) => panic!("Error writing image to file: {}", why),
     }
 }
 
-// First iteration of drawing the line
 fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, image: &mut tga::Image, color: &tga::Color) {
     let steep = (x1 - x0).abs() < (y1 - y0).abs();
 
