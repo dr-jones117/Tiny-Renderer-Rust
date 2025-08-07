@@ -1,6 +1,8 @@
 use bytemuck::{Pod, Zeroable}; //TODO : what does this do?
 use std::{fs::File, io::Write, path::Path};
 
+use crate::tga;
+
 pub struct Color(pub u8, pub u8, pub u8, pub u8);
 
 #[derive(Debug)]
@@ -119,6 +121,47 @@ impl Image {
         }
 
         true
+    }
+
+    pub fn draw_line(&mut self, x0: i32, y0: i32, x1: i32, y1: i32, color: &tga::Color) {
+        let steep = (x1 - x0).abs() < (y1 - y0).abs();
+
+        // transpose it if it's steep
+        let (x0, y0, x1, y1) = if steep {
+            (y0, x0, y1, x1)
+        } else {
+            (x0, y0, x1, y1)
+        };
+
+        // if going right to left, we need to swap the points to go left to right
+        let (x0, y0, x1, y1) = if x0 > x1 {
+            (x1, y1, x0, y0)
+        } else {
+            (x0, y0, x1, y1)
+        };
+
+        let dx = x1 - x0;
+        let dy = y1 - y0;
+
+        let derror = (dy * 2).abs();
+        let mut error = 0;
+        let mut y = y0;
+
+        for x in x0..=x1 {
+            if steep {
+                // detranspose the image
+                self.set(y as u16, x as u16, color);
+            } else {
+                self.set(x as u16, y as u16, color);
+            }
+
+            error += derror;
+
+            if error > dx {
+                y += if y1 > y0 { 1 } else { -1 };
+                error -= dx * 2;
+            }
+        }
     }
 
     pub fn write_to_file(&self, name: &str) -> std::io::Result<()> {
