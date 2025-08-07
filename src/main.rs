@@ -1,60 +1,46 @@
+mod geometry;
+mod mesh;
 mod tga;
 
-fn main() {
-    let color = tga::Color(150, 100, 50, 255);
+use mesh::Mesh;
+use std::env;
+use std::process;
 
-    let mut image = tga::Image::new(
-        100,
-        100,
-        tga::ImageType::UncompressedTrueColor,
-        tga::ColorType::RGB,
-    );
+struct Config<'a> {
+    obj_file_path: &'a str,
+    img_file_path: &'a str,
+}
 
-    draw_line(80, 40, 13, 20, &mut image, &color);
+impl<'a> Config<'a> {
+    pub fn build(args: &Vec<String>) -> Config {
+        let mut obj_file_path = "./obj/african_head.obj";
+        let mut img_file_path = "./tga/img.tga";
 
-    match image.write_to_file("test.tga") {
-        Ok(()) => (),
-        Err(why) => panic!("Error writing image to file: {}", why),
+        if args.len() >= 2 {
+            obj_file_path = args[1].as_str();
+        }
+        if args.len() >= 3 {
+            img_file_path = args[2].as_str();
+        }
+
+        Config {
+            obj_file_path,
+            img_file_path,
+        }
     }
 }
 
-fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, image: &mut tga::Image, color: &tga::Color) {
-    let steep = (x1 - x0).abs() < (y1 - y0).abs();
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let config = Config::build(&args);
 
-    // transpose it if it's steep
-    let (x0, y0, x1, y1) = if steep {
-        (y0, x0, y1, x1)
-    } else {
-        (x0, y0, x1, y1)
-    };
+    let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
+        eprintln!("Error creating the mesh: {}", err);
+        process::exit(1);
+    });
 
-    // if going right to left, we need to swap the points to go left to right
-    let (x0, y0, x1, y1) = if x0 > x1 {
-        (x1, y1, x0, y0)
-    } else {
-        (x0, y0, x1, y1)
-    };
-
-    let dx = x1 - x0;
-    let dy = y1 - y0;
-
-    let derror = (dy * 2).abs();
-    let mut error = 0;
-    let mut y = y0;
-
-    for x in x0..=x1 {
-        if steep {
-            // detranspose the image
-            image.set(y as u16, x as u16, color);
-        } else {
-            image.set(x as u16, y as u16, color);
-        }
-
-        error += derror;
-
-        if error > dx {
-            y += if y1 > y0 { 1 } else { -1 };
-            error -= dx * 2;
-        }
+    if let Err(err) = mesh.write_to_tga_image(config.img_file_path) {
+        eprintln!("Error creating image from mesh: {}", err);
+        process::exit(1);
     }
 }
