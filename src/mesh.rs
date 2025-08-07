@@ -1,3 +1,4 @@
+use core::f32;
 use std::error::Error;
 use std::fs;
 
@@ -17,12 +18,16 @@ impl Mesh {
         self.faces.len()
     }
 
-    pub fn vertex_at(&self, index: usize) -> &Vec4<f32> {
-        &self.vertices[index]
-    }
-
     pub fn face_at(&self, index: usize) -> &Vec<i32> {
         &self.faces[index]
+    }
+
+    pub fn len_vertices(&self) -> usize {
+        self.vertices.len()
+    }
+
+    pub fn vertex_at(&self, index: usize) -> &Vec4<f32> {
+        &self.vertices[index]
     }
 
     pub fn from_obj_file(obj_file_path: &str) -> Result<Mesh, Box<dyn Error>> {
@@ -65,23 +70,52 @@ impl Mesh {
             tga::ColorType::RGB,
         );
 
-        for i in 0..self.len_faces() {
-            let face = self.face_at(i);
-            for j in 0..3 {
-                let v0 = self.vertex_at(face[j * 3] as usize);
-                let v1 = self.vertex_at(face[((j + 1) * 3) % face.len()] as usize);
+        let mut min_x = f32::INFINITY;
+        let mut max_x = f32::NEG_INFINITY;
+        let mut min_y = f32::INFINITY;
+        let mut max_y = f32::NEG_INFINITY;
 
-                let x0 = ((v0.x + 1.0) * width as f32 / 2.0) as i32;
-                let y0 = ((v0.y + 1.0) * height as f32 / 2.0) as i32;
-
-                let x1 = ((v1.x + 1.0) * width as f32 / 2.0) as i32;
-                let y1 = ((v1.y + 1.0) * height as f32 / 2.0) as i32;
-
-                image.draw_line(x0, y0, x1, y1, &color);
-                //println!("drawing line from: ({}, {}), to ({}, {})", x0, y0, x1, y1);
-            }
+        for i in 0..self.len_vertices() {
+            let v = self.vertex_at(i);
+            min_x = min_x.min(v.x);
+            max_x = max_x.max(v.x);
+            min_y = min_y.min(v.y);
+            max_y = max_y.max(v.y);
         }
 
+        let range_x = max_x - min_x;
+        let range_y = max_y - min_y;
+        let max_range = range_x.max(range_y);
+        let scale = if max_range > 0.0 {
+            1.8 / max_range
+        } else {
+            1.0
+        };
+
+        let center_x = (min_x + max_x) / 2.0;
+        let center_y = (min_y + max_y) / 2.0;
+
+        for i in 0..self.len_faces() {
+            let face: &Vec<i32> = self.face_at(i);
+
+            for j in 0..3 {
+                let v0: &Vec4<f32> = self.vertex_at(face[j * 3] as usize);
+                let v1: &Vec4<f32> = self.vertex_at(face[((j + 1) * 3) % face.len()] as usize);
+
+                // Center and scale the coordinates
+                let scaled_x0 = (v0.x - center_x) * scale;
+                let scaled_y0 = (v0.y - center_y) * scale;
+                let scaled_x1 = (v1.x - center_x) * scale;
+                let scaled_y1 = (v1.y - center_y) * scale;
+
+                let x0: i32 = ((scaled_x0 + 1.0) * width as f32 / 2.0) as i32;
+                let y0: i32 = ((scaled_y0 + 1.0) * height as f32 / 2.0) as i32;
+                let x1: i32 = ((scaled_x1 + 1.0) * width as f32 / 2.0) as i32;
+                let y1: i32 = ((scaled_y1 + 1.0) * height as f32 / 2.0) as i32;
+
+                image.draw_line(x0, y0, x1, y1, &color);
+            }
+        }
         image.write_to_file(img_path)?;
         Ok(())
     }
