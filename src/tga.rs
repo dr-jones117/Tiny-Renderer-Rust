@@ -1,11 +1,13 @@
-use bytemuck::{Pod, Zeroable}; //TODO : what does this do?
+use bytemuck::{Pod, Zeroable};
 use std::{fs::File, io::Write, path::Path};
 
-use crate::{mesh, renderer, tga};
+use crate::tga;
 
+#[allow(dead_code)]
 pub struct Color(pub u8, pub u8, pub u8, pub u8);
 pub struct ImageCoords(pub i32, pub i32);
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ColorType {
     RGB,
@@ -13,6 +15,7 @@ pub enum ColorType {
     RGBA,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ImageType {
     UncompressedTrueColor,
@@ -96,11 +99,11 @@ impl Image {
         }
     }
 
-    pub fn set(&mut self, x: u16, y: u16, color: &Color) -> bool {
-        let width = self.width();
-        let height = self.height();
+    pub fn set(&mut self, x: i32, y: i32, color: &Color) -> bool {
+        let width = self.width() as i32;
+        let height = self.height() as i32;
 
-        if self.data.is_empty() || x >= width || y >= height {
+        if self.data.is_empty() || x >= width || y >= height || x < 0 || y < 0 {
             return false;
         }
 
@@ -151,9 +154,9 @@ impl Image {
         for x in x0..=x1 {
             if steep {
                 // detranspose the image
-                self.set(y as u16, x as u16, color);
+                self.set(y, x, color);
             } else {
-                self.set(x as u16, y as u16, color);
+                self.set(x, y, color);
             }
 
             error += derror;
@@ -161,26 +164,6 @@ impl Image {
             if error > dx {
                 y += if y1 > y0 { 1 } else { -1 };
                 error -= dx * 2;
-            }
-        }
-    }
-
-    pub fn draw_triangle(
-        &mut self,
-        v0: ImageCoords,
-        v1: ImageCoords,
-        v2: ImageCoords,
-        color: &tga::Color,
-        draw_type: &renderer::DrawType,
-    ) {
-        match draw_type {
-            renderer::DrawType::Fill => {
-                panic! {"not implemented"};
-            }
-            renderer::DrawType::Line => {
-                self.draw_line(v0.0, v0.1, v1.0, v1.1, color);
-                self.draw_line(v1.0, v1.1, v2.0, v2.1, color);
-                self.draw_line(v2.0, v2.1, v0.0, v0.1, color);
             }
         }
     }

@@ -4,16 +4,25 @@ use std::fs;
 
 use super::geometry::{Vec3, Vec4};
 
-#[derive(Debug)]
-pub struct TriangleMesh {
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+pub struct Mesh {
     pub vertices: Vec<Vec4<f32>>,
     pub vertex_normals: Vec<Vec3<f32>>,
     pub texture_coordinates: Vec<Vec3<f32>>,
     pub faces: Vec<Vec<i32>>,
 }
 
-impl TriangleMesh {
-    pub fn from_obj_file(obj_file_path: &str) -> Result<TriangleMesh, Box<dyn Error>> {
+impl Mesh {
+    pub fn new() -> Mesh {
+        Mesh {
+            vertices: Vec::new(),
+            vertex_normals: Vec::new(),
+            texture_coordinates: Vec::new(),
+            faces: Vec::new(),
+        }
+    }
+    pub fn from_obj_file(obj_file_path: &str) -> Result<Mesh, Box<dyn Error>> {
         let obj_content = fs::read_to_string(obj_file_path)?;
         let mut vertices: Vec<Vec4<f32>> = Vec::new();
         let mut texture_coordinates: Vec<Vec3<f32>> = Vec::new();
@@ -22,90 +31,90 @@ impl TriangleMesh {
 
         for line in obj_content.lines() {
             if line.starts_with("v ") {
-                vertices.push(parse_vertex(line)?);
+                vertices.push(Mesh::parse_vertex(line)?);
             } else if line.starts_with("f ") {
-                faces.push(parse_face(line)?);
+                faces.push(Mesh::parse_face(line)?);
             } else if line.starts_with("vn ") {
-                vertex_normals.push(parse_vertex_normal(line)?);
+                vertex_normals.push(Mesh::parse_vertex_normal(line)?);
             } else if line.starts_with("vt ") {
-                texture_coordinates.push(parse_texture_coordinate(line)?);
+                texture_coordinates.push(Mesh::parse_texture_coordinate(line)?);
             }
         }
 
-        Ok(TriangleMesh {
+        Ok(Mesh {
             vertices,
             vertex_normals,
             texture_coordinates,
             faces,
         })
     }
-}
 
-fn parse_face(line: &str) -> Result<Vec<i32>, Box<dyn Error>> {
-    let tokens: Vec<&str> = line.split_whitespace().collect();
-    let mut face_vertices: Vec<i32> = Vec::new();
+    fn parse_face(line: &str) -> Result<Vec<i32>, Box<dyn Error>> {
+        let tokens: Vec<&str> = line.split_whitespace().collect();
+        let mut face_vertices: Vec<i32> = Vec::new();
 
-    for token in tokens {
-        if token.starts_with("f") {
-            continue;
-        }
-        if token.starts_with("#") {
-            break;
-        }
+        for token in tokens {
+            if token.starts_with("f") {
+                continue;
+            }
+            if token.starts_with("#") {
+                break;
+            }
 
-        let indice: Vec<&str> = token.split("/").collect();
-        for value in indice {
-            if let Ok(mut idx) = value.parse::<i32>() {
-                idx -= 1;
-                face_vertices.push(idx);
-            } else {
-                face_vertices.push(0);
+            let indice: Vec<&str> = token.split("/").collect();
+            for value in indice {
+                if let Ok(mut idx) = value.parse::<i32>() {
+                    idx -= 1;
+                    face_vertices.push(idx);
+                } else {
+                    face_vertices.push(0);
+                }
             }
         }
+
+        Ok(face_vertices)
     }
 
-    Ok(face_vertices)
-}
+    fn parse_vertex_normal(line: &str) -> Result<Vec3<f32>, Box<dyn Error>> {
+        let tokens: Vec<&str> = line.split_whitespace().collect();
 
-fn parse_vertex_normal(line: &str) -> Result<Vec3<f32>, Box<dyn Error>> {
-    let tokens: Vec<&str> = line.split_whitespace().collect();
+        let x = tokens[1].parse()?;
+        let y = tokens[2].parse()?;
+        let z = tokens[3].parse()?;
 
-    let x = tokens[1].parse()?;
-    let y = tokens[2].parse()?;
-    let z = tokens[3].parse()?;
-
-    Ok(Vec3 { x, y, z })
-}
-
-fn parse_texture_coordinate(line: &str) -> Result<Vec3<f32>, Box<dyn Error>> {
-    let tokens: Vec<&str> = line.split_whitespace().collect();
-
-    let u = tokens[1].parse()?;
-    let mut v: f32 = 0.0;
-    let mut w: f32 = 0.0;
-
-    if tokens.len() > 2 {
-        v = tokens[2].parse()?;
+        Ok(Vec3 { x, y, z })
     }
 
-    if tokens.len() > 3 {
-        w = tokens[3].parse()?;
+    fn parse_texture_coordinate(line: &str) -> Result<Vec3<f32>, Box<dyn Error>> {
+        let tokens: Vec<&str> = line.split_whitespace().collect();
+
+        let u = tokens[1].parse()?;
+        let mut v: f32 = 0.0;
+        let mut w: f32 = 0.0;
+
+        if tokens.len() > 2 {
+            v = tokens[2].parse()?;
+        }
+
+        if tokens.len() > 3 {
+            w = tokens[3].parse()?;
+        }
+
+        Ok(Vec3 { x: u, y: v, z: w })
     }
 
-    Ok(Vec3 { x: u, y: v, z: w })
-}
+    fn parse_vertex(line: &str) -> Result<Vec4<f32>, Box<dyn Error>> {
+        let tokens: Vec<&str> = line.split_whitespace().collect();
 
-fn parse_vertex(line: &str) -> Result<Vec4<f32>, Box<dyn Error>> {
-    let tokens: Vec<&str> = line.split_whitespace().collect();
+        let x: f32 = tokens[1].parse()?;
+        let y: f32 = tokens[2].parse()?;
+        let z: f32 = tokens[3].parse()?;
+        let mut a = 1.0;
 
-    let x: f32 = tokens[1].parse()?;
-    let y: f32 = tokens[2].parse()?;
-    let z: f32 = tokens[3].parse()?;
-    let mut a = 1.0;
+        if tokens.len() > 4 {
+            a = tokens[4].parse()?;
+        }
 
-    if tokens.len() > 4 {
-        a = tokens[4].parse()?;
+        Ok(Vec4 { x, y, z, a })
     }
-
-    Ok(Vec4 { x, y, z, a })
 }

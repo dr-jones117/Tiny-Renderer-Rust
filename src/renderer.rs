@@ -1,24 +1,26 @@
 use std::error::Error;
 
-use crate::geometry::{Vec3, Vec4};
+use crate::geometry::Vec4;
+use crate::mesh::Mesh;
 use crate::tga::{self, ImageCoords};
 
+static MESH_CAPACITY: usize = 50;
+
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum DrawType {
     Fill,
     Line,
 }
 
+#[allow(dead_code)]
 pub enum DrawOutput {
     Tga(String),
     Screen,
 }
 
 pub struct TinyRenderer {
-    vertices: Vec<Vec4<f32>>,
-    vertex_normals: Vec<Vec3<f32>>,
-    texture_coordinates: Vec<Vec3<f32>>,
-    faces: Vec<Vec<i32>>,
+    meshes: Vec<Mesh>,
     config: TinyRendererConfig,
 }
 
@@ -39,11 +41,8 @@ impl TinyRendererConfig {
 impl TinyRenderer {
     pub fn new() -> TinyRenderer {
         TinyRenderer {
-            vertices: Vec::new(),
-            vertex_normals: Vec::new(),
-            texture_coordinates: Vec::new(),
-            faces: Vec::new(),
             config: TinyRendererConfig::new(),
+            meshes: vec![Mesh::new(); MESH_CAPACITY],
         }
     }
 
@@ -55,12 +54,29 @@ impl TinyRenderer {
         self.config.draw_output = draw_output;
     }
 
-    pub fn set_vertices(&mut self, vertices: Vec<Vec4<f32>>) {
-        self.vertices = vertices;
+    pub fn set_vertices(&mut self, id: usize, vertices: Vec<Vec4<f32>>) {
+        if id > MESH_CAPACITY - 1 {
+            panic!("Out of bounds!");
+        }
+        self.meshes[id].vertices = vertices;
     }
 
-    pub fn set_faces(&mut self, faces: Vec<Vec<i32>>) {
-        self.faces = faces;
+    pub fn scale_vertices(&mut self, id: usize, scale: f32) {
+        if id > MESH_CAPACITY - 1 {
+            panic!("Out of bounds!");
+        }
+        for vertice in self.meshes[id].vertices.iter_mut() {
+            vertice.x = scale * vertice.x;
+            vertice.y = scale * vertice.y;
+            vertice.z = scale * vertice.z;
+        }
+    }
+
+    pub fn set_faces(&mut self, id: usize, faces: Vec<Vec<i32>>) {
+        if id > MESH_CAPACITY - 1 {
+            panic!("Out of bounds!");
+        }
+        self.meshes[id].faces = faces;
     }
 
     pub fn draw(&self) -> Result<(), Box<dyn Error>> {
@@ -88,20 +104,29 @@ impl TinyRenderer {
             tga::ColorType::RGB,
         );
 
-        for i in 0..self.faces.len() {
-            let face: &Vec<i32> = &self.faces[i];
+        for mesh in self.meshes.iter() {
+            for face_index in 0..mesh.faces.len() {
+                let face: &Vec<i32> = &mesh.faces[face_index];
 
-            let v0 = &self.vertices[face[0] as usize];
-            let v1 = &self.vertices[face[3] as usize];
-            let v2 = &self.vertices[face[6] as usize];
+                let v0 = &mesh.vertices[face[0] as usize];
+                let v1 = &mesh.vertices[face[3] as usize];
+                let v2 = &mesh.vertices[face[6] as usize];
 
-            image.draw_triangle(
-                world_to_image_coords(v0, &image),
-                world_to_image_coords(v1, &image),
-                world_to_image_coords(v2, &image),
-                &color,
-                &self.config.draw_type,
-            );
+                let v0 = world_to_image_coords(v0, &image);
+                let v1 = world_to_image_coords(v1, &image);
+                let v2 = world_to_image_coords(v2, &image);
+
+                match self.config.draw_type {
+                    DrawType::Fill => {
+                        panic! {"not implemented"};
+                    }
+                    DrawType::Line => {
+                        image.draw_line(v0.0, v0.1, v1.0, v1.1, &color);
+                        image.draw_line(v1.0, v1.1, v2.0, v2.1, &color);
+                        image.draw_line(v2.0, v2.1, v0.0, v0.1, &color);
+                    }
+                }
+            }
         }
 
         image.write_to_file(img_path)?;

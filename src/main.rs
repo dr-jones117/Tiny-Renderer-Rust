@@ -7,7 +7,7 @@ use std::env;
 use std::process;
 
 use geometry::Vec4;
-use mesh::TriangleMesh;
+use mesh::Mesh;
 use renderer::{DrawOutput, DrawType, TinyRenderer};
 
 struct Config<'a> {
@@ -45,44 +45,40 @@ fn main() {
     renderer.set_draw_output(DrawOutput::Tga(config.img_file_path));
 
     // read in a mesh from our obj file
-    let mesh = TriangleMesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
 
     // set our renderers verts and faces
-    renderer.set_vertices(mesh.vertices);
-    renderer.set_faces(mesh.faces);
+    renderer.set_vertices(0, mesh.vertices);
+    renderer.set_faces(0, mesh.faces);
+    renderer.scale_vertices(0, 0.1);
 
-    // draw our render
-    if let Err(err) = renderer.draw() {
-        eprintln!("Error rendering mesh: {}", err);
-        process::exit(1);
-    }
-
-    renderer.set_vertices(vec![
-        Vec4 {
-            x: -0.9,
-            y: 0.0,
-            z: 0.0,
-            a: 1.0,
-        },
-        Vec4 {
-            x: 0.9,
-            y: 0.9,
-            z: 0.0,
-            a: 1.0,
-        },
-        Vec4 {
-            x: 0.9,
-            y: 0.0,
-            z: 0.0,
-            a: 1.0,
-        },
-    ]);
-    renderer.set_faces(vec![vec![0, 0, 0, 1, 0, 0, 2, 0, 0]]);
-
-    renderer.set_draw_output(DrawOutput::Tga(String::from("./tga/triangle.tga")));
+    renderer.set_vertices(
+        1,
+        vec![
+            Vec4 {
+                x: -0.9,
+                y: 0.0,
+                z: 0.0,
+                a: 1.0,
+            },
+            Vec4 {
+                x: 0.9,
+                y: 0.9,
+                z: 0.0,
+                a: 1.0,
+            },
+            Vec4 {
+                x: 0.9,
+                y: 0.0,
+                z: 0.0,
+                a: 1.0,
+            },
+        ],
+    );
+    renderer.set_faces(1, vec![vec![0, 0, 0, 1, 0, 0, 2, 0, 0]]);
 
     if let Err(err) = renderer.draw() {
         eprintln!("Error rendering mesh: {}", err);

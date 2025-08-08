@@ -1,13 +1,13 @@
 use std::ops::{Add, Mul, Sub};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Vec4<T> {
     pub x: T,
     pub y: T,
