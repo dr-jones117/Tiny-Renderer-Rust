@@ -1,9 +1,10 @@
 use bytemuck::{Pod, Zeroable}; //TODO : what does this do?
 use std::{fs::File, io::Write, path::Path};
 
-use crate::tga;
+use crate::{mesh, renderer, tga};
 
 pub struct Color(pub u8, pub u8, pub u8, pub u8);
+pub struct ImageCoords(pub i32, pub i32);
 
 #[derive(Debug)]
 pub enum ColorType {
@@ -164,6 +165,26 @@ impl Image {
         }
     }
 
+    pub fn draw_triangle(
+        &mut self,
+        v0: ImageCoords,
+        v1: ImageCoords,
+        v2: ImageCoords,
+        color: &tga::Color,
+        draw_type: &renderer::DrawType,
+    ) {
+        match draw_type {
+            renderer::DrawType::Fill => {
+                panic! {"not implemented"};
+            }
+            renderer::DrawType::Line => {
+                self.draw_line(v0.0, v0.1, v1.0, v1.1, color);
+                self.draw_line(v1.0, v1.1, v2.0, v2.1, color);
+                self.draw_line(v2.0, v2.1, v0.0, v0.1, color);
+            }
+        }
+    }
+
     pub fn write_to_file(&self, name: &str) -> std::io::Result<()> {
         let path = Path::new(name);
         let mut file = match File::create(&path) {
@@ -177,11 +198,11 @@ impl Image {
         Ok(())
     }
 
-    fn width(&self) -> u16 {
+    pub fn width(&self) -> u16 {
         self.header.width
     }
 
-    fn height(&self) -> u16 {
+    pub fn height(&self) -> u16 {
         self.header.height
     }
 }
