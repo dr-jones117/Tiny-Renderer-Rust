@@ -6,7 +6,6 @@ mod tga;
 use std::env;
 use std::process;
 
-use geometry::Vec4;
 use mesh::Mesh;
 use renderer::{DrawOutput, DrawType, TinyRenderer};
 
@@ -41,8 +40,30 @@ fn main() {
 
     // setup our renderer
     let mut renderer = TinyRenderer::new();
-    renderer.set_draw_type(DrawType::Line);
+    renderer.set_draw_type(DrawType::Fill);
     renderer.set_draw_output(DrawOutput::Tga(config.img_file_path));
+
+    let bodyMesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
+        eprintln!("Error reading in the mesh: {}", err);
+        process::exit(1);
+    });
+
+    renderer.set_vertices(0, bodyMesh.vertices.clone());
+    renderer.set_faces(0, bodyMesh.faces.clone());
+    renderer.scale_vertices(0, 0.05);
+    renderer.move_vertices(0, 0.0, -1.2);
+
+
+    renderer.set_vertices(3, bodyMesh.vertices.clone());
+    renderer.set_faces(3, bodyMesh.faces.clone());
+    renderer.scale_vertices(3, 0.1);
+    renderer.move_vertices(3, -1.0, -1.0);
+
+
+    renderer.set_vertices(4, bodyMesh.vertices.clone());
+    renderer.set_faces(4, bodyMesh.faces.clone());
+    renderer.scale_vertices(4, 0.1);
+    renderer.move_vertices(4, 1.0, -1.0);
 
     // read in a mesh from our obj file
     let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
@@ -51,34 +72,10 @@ fn main() {
     });
 
     // set our renderers verts and faces
-    renderer.set_vertices(0, mesh.vertices);
-    renderer.set_faces(0, mesh.faces);
-    renderer.scale_vertices(0, 0.1);
+    renderer.set_vertices(1, mesh.vertices);
+    renderer.set_faces(1, mesh.faces);
+    renderer.scale_vertices(1, 0.5);
 
-    renderer.set_vertices(
-        1,
-        vec![
-            Vec4 {
-                x: -0.9,
-                y: 0.0,
-                z: 0.0,
-                a: 1.0,
-            },
-            Vec4 {
-                x: 0.9,
-                y: 0.9,
-                z: 0.0,
-                a: 1.0,
-            },
-            Vec4 {
-                x: 0.9,
-                y: 0.0,
-                z: 0.0,
-                a: 1.0,
-            },
-        ],
-    );
-    renderer.set_faces(1, vec![vec![0, 0, 0, 1, 0, 0, 2, 0, 0]]);
 
     if let Err(err) = renderer.draw() {
         eprintln!("Error rendering mesh: {}", err);
