@@ -1,19 +1,9 @@
+use crate::graphics::{
+    color::{Color, ColorType},
+    output::RenderOutputter,
+};
 use bytemuck::{Pod, Zeroable};
 use std::{fs::File, io::Write, path::Path};
-
-#[allow(dead_code)]
-pub struct Color(pub u8, pub u8, pub u8, pub u8);
-
-#[derive(Debug)]
-pub struct ImageCoords(pub i32, pub i32);
-
-#[allow(dead_code)]
-#[derive(Debug)]
-pub enum ColorType {
-    RGB,
-    GrayScale,
-    RGBA,
-}
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -31,16 +21,6 @@ impl ImageType {
             ImageType::UncompressedGrayScale => 3,
             ImageType::RleTrueColor => 10,
             ImageType::RleGrayScale => 11,
-        }
-    }
-}
-
-impl ColorType {
-    fn bytes_per_pixel(&self) -> u8 {
-        match self {
-            ColorType::GrayScale => 1,
-            ColorType::RGB => 3,
-            ColorType::RGBA => 4,
         }
     }
 }
@@ -88,23 +68,21 @@ pub struct Image {
     data: Vec<u8>,
 }
 
-impl Image {
-    pub fn new(width: u16, height: u16, image_type: ImageType, color_type: ColorType) -> Image {
-        let data_length =
-            (width as u32 * height as u32 * color_type.bytes_per_pixel() as u32) as usize;
-        Image {
-            header: Header::new(width, height, &image_type, &color_type),
-            color_type,
-            data: vec![0; data_length],
-        }
+impl RenderOutputter for Image {
+    fn width(&self) -> u16 {
+        self.header.width
     }
 
-    pub fn set(&mut self, x: i32, y: i32, color: &Color) -> bool {
+    fn height(&self) -> u16 {
+        self.header.height
+    }
+
+    fn set(&mut self, x: i32, y: i32, color: &Color) {
         let width = self.width() as i32;
         let height = self.height() as i32;
 
         if self.data.is_empty() || x >= width || y >= height || x < 0 || y < 0 {
-            return false;
+            return;
         }
 
         let bpp = self.color_type.bytes_per_pixel() as usize;
@@ -123,10 +101,26 @@ impl Image {
                 panic!("unimplemented RGBA in tga image set");
             }
         }
-
-        true
     }
 
+    fn render(&self) -> Result<(), Box<dyn std::error::Error>> {
+        match self.write_to_file("test.tga") {
+            Err(err) => Err(Box::new(err)),
+            Ok(()) => Ok(()),
+        }
+    }
+}
+
+impl Image {
+    pub fn new(width: u16, height: u16, image_type: ImageType, color_type: ColorType) -> Image {
+        let data_length =
+            (width as u32 * height as u32 * color_type.bytes_per_pixel() as u32) as usize;
+        Image {
+            header: Header::new(width, height, &image_type, &color_type),
+            color_type,
+            data: vec![0; data_length],
+        }
+    }
 
     pub fn write_to_file(&self, name: &str) -> std::io::Result<()> {
         let path = Path::new(name);
@@ -139,13 +133,5 @@ impl Image {
         file.write_all(header)?;
         file.write_all(&self.data[..])?;
         Ok(())
-    }
-
-    pub fn width(&self) -> u16 {
-        self.header.width
-    }
-
-    pub fn height(&self) -> u16 {
-        self.header.height
     }
 }

@@ -1,8 +1,9 @@
 use std::error::Error;
 
 use crate::geometry::Vec4;
+use crate::graphics::color::Color;
+use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
 use crate::mesh::Mesh;
-use crate::tga::{self, ImageCoords};
 use rand::Rng;
 
 #[allow(dead_code)]
@@ -14,14 +15,19 @@ pub enum DrawType {
 
 #[allow(dead_code)]
 pub enum DrawOutput {
-    Tga(String),
+    Tga {
+        file_path: String,
+        width: u16,
+        height: u16,
+    },
     Window,
 }
 
-pub struct TinyRenderer {
+pub struct TinyRenderer<T: RenderOutputter> {
     meshes: Vec<Mesh>,
     draw_types: Vec<DrawType>,
     config: TinyRendererConfig,
+    render_output: T,
 }
 
 pub struct TinyRendererConfig {
@@ -31,17 +37,22 @@ pub struct TinyRendererConfig {
 impl TinyRendererConfig {
     fn new() -> TinyRendererConfig {
         TinyRendererConfig {
-            draw_output: DrawOutput::Tga(String::from("")),
+            draw_output: DrawOutput::Tga {
+                file_path: String::from(""),
+                width: 800,
+                height: 800,
+            },
         }
     }
 }
 
-impl TinyRenderer {
-    pub fn new() -> TinyRenderer {
+impl<T: RenderOutputter> TinyRenderer<T> {
+    pub fn new(render_output: T) -> TinyRenderer<T> {
         TinyRenderer {
             config: TinyRendererConfig::new(),
             draw_types: Vec::new(),
             meshes: Vec::new(),
+            render_output,
         }
     }
 
@@ -80,42 +91,20 @@ impl TinyRenderer {
         self.draw_types[id] = draw_type;
     }
 
-    pub fn draw(&self) -> Result<(), Box<dyn Error>> {
-        match self.config.draw_output {
-            DrawOutput::Tga(ref str) => {
-                self.write_to_tga_image(str.as_str())?;
-            }
-            DrawOutput::Window => {
-                panic!("outputting to screen not implemented!");
-            }
-        }
-        Ok(())
-    }
+    pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
+        //TODO: make sure to new up the outputter when creating the renderer
 
-    fn check_mesh_range(&self, id: &usize) {
-        if *id > self.meshes.len() - 1 {
-            panic!("Error In Renderer: Referencing an invalid mesh.")
-        }
-    }
+        let color = Color(20, 200, 50, 255);
 
-    fn write_to_tga_image(&self, img_path: &str) -> Result<(), Box<dyn Error>> {
-        let width = 800;
-        let height = 800;
-
-        let color = tga::Color(20, 200, 50, 255);
-
-        let mut image = tga::Image::new(
-            width,
-            height,
-            tga::ImageType::UncompressedTrueColor,
-            tga::ColorType::RGB,
-        );
-
-        for (i, mesh) in self.meshes.iter().enumerate() {
-            let mut transformed_coords: Vec<ImageCoords> = Vec::new();
+        for (i, mesh) in self.meshes.iter_mut().enumerate() {
+            let mut transformed_coords: Vec<RenderOutputCoords> = Vec::new();
 
             for vertice in mesh.vertices.iter() {
-                transformed_coords.push(world_to_image_coords(vertice, &image))
+                transformed_coords.push(world_to_output_coordinates(
+                    self.render_output.width(),
+                    self.render_output.height(),
+                    vertice,
+                ))
             }
 
             for face_index in 0..mesh.faces.len() {
@@ -127,36 +116,48 @@ impl TinyRenderer {
 
                 match &self.draw_types[i] {
                     DrawType::Fill => {
-                        rasterize_triangle(v0, v1, v2, &color, &mut image);
+                        rasterize_triangle(v0, v1, v2, &color, &mut self.render_output);
                     }
                     DrawType::Line => {
-                        draw_line(v0.0, v0.1, v1.0, v1.1, &color, &mut image);
-                        draw_line(v1.0, v1.1, v2.0, v2.1, &color, &mut image);
-                        draw_line(v2.0, v2.1, v0.0, v0.1, &color, &mut image);
+                        draw_line(v0.0, v0.1, v1.0, v1.1, &color, &mut self.render_output);
+                        draw_line(v1.0, v1.1, v2.0, v2.1, &color, &mut self.render_output);
+                        draw_line(v2.0, v2.1, v0.0, v0.1, &color, &mut self.render_output);
                     }
                 }
             }
         }
 
-        image.write_to_file(img_path)?;
+        self.render_output.render()?;
         Ok(())
+    }
+
+    fn check_mesh_range(&self, id: &usize) {
+        if *id > self.meshes.len() - 1 {
+            panic!("Error In Renderer: Referencing an invalid mesh.")
+        }
     }
 }
 
-fn world_to_image_coords(world_coords: &Vec4<f32>, image: &tga::Image) -> ImageCoords {
-    ImageCoords(
-        ((world_coords.x + 1.0) * image.width() as f32 / 2.0) as i32,
-        ((world_coords.y + 1.0) * image.height() as f32 / 2.0) as i32,
+fn world_to_output_coordinates(
+    width: u16,
+    height: u16,
+    world_coords: &Vec4<f32>,
+) -> RenderOutputCoords {
+    RenderOutputCoords(
+        ((world_coords.x + 1.0) * width as f32 / 2.0) as i32,
+        ((world_coords.y + 1.0) * height as f32 / 2.0) as i32,
     )
 }
 
-fn rasterize_triangle(
-    v0: &ImageCoords,
-    v1: &ImageCoords,
-    v2: &ImageCoords,
-    color: &tga::Color,
-    image: &mut tga::Image,
-) {
+fn rasterize_triangle<T>(
+    v0: &RenderOutputCoords,
+    v1: &RenderOutputCoords,
+    v2: &RenderOutputCoords,
+    color: &Color,
+    render_output: &mut T,
+) where
+    T: RenderOutputter,
+{
     // Early return if triangle is degenerate (all points have same x coordinate)
     if v0.0 == v1.0 && v0.0 == v2.0 {
         return;
@@ -180,11 +181,11 @@ fn rasterize_triangle(
     let red = rng.random_range(0..255);
     let green = rng.random_range(0..255);
     let blue = rng.random_range(0..255);
-    let triangle_color = tga::Color(red, green, blue, 255);
+    let triangle_color = Color(red, green, blue, 255);
 
     // Get image dimensions
-    let width = image.width() as i32;
-    let height = image.height() as i32;
+    let width = render_output.width() as i32;
+    let height = render_output.height() as i32;
 
     // Find bounding box of the triangle
     let min_x = (v0.0.min(v1.0).min(v2.0)).max(0);
@@ -195,7 +196,7 @@ fn rasterize_triangle(
     // Rasterize using barycentric coordinates
     for y in min_y..=max_y {
         for x in min_x..=max_x {
-            let p = ImageCoords(x, y);
+            let p = RenderOutputCoords(x, y);
 
             // Calculate barycentric coordinates
             let (w0, w1, w2) = barycentric_coords(&p, v0, v1, v2);
@@ -203,7 +204,7 @@ fn rasterize_triangle(
             // Check if point is inside triangle (all barycentric coordinates >= 0)
             if w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 {
                 // Draw the pixel
-                draw_line(x, y, x, y, &triangle_color, image);
+                draw_line(x, y, x, y, &triangle_color, render_output);
             }
         }
     }
@@ -211,10 +212,10 @@ fn rasterize_triangle(
 
 // Helper function to calculate barycentric coordinates
 fn barycentric_coords(
-    p: &ImageCoords,
-    v0: &ImageCoords,
-    v1: &ImageCoords,
-    v2: &ImageCoords,
+    p: &RenderOutputCoords,
+    v0: &RenderOutputCoords,
+    v1: &RenderOutputCoords,
+    v2: &RenderOutputCoords,
 ) -> (f32, f32, f32) {
     let denom = ((v1.1 - v2.1) * (v0.0 - v2.0) + (v2.0 - v1.0) * (v0.1 - v2.1)) as f32;
 
@@ -230,7 +231,10 @@ fn barycentric_coords(
     (w0, w1, w2)
 }
 
-fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, color: &tga::Color, image: &mut tga::Image) {
+fn draw_line<T>(x0: i32, y0: i32, x1: i32, y1: i32, color: &Color, render_output: &mut T)
+where
+    T: RenderOutputter,
+{
     let steep = (x1 - x0).abs() < (y1 - y0).abs();
 
     // transpose it if it's steep
@@ -257,9 +261,9 @@ fn draw_line(x0: i32, y0: i32, x1: i32, y1: i32, color: &tga::Color, image: &mut
     for x in x0..=x1 {
         if steep {
             // detranspose the image
-            image.set(y, x, color);
+            render_output.set(y, x, color);
         } else {
-            image.set(x, y, color);
+            render_output.set(x, y, color);
         }
 
         error += derror;
