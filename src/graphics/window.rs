@@ -33,6 +33,10 @@ impl TinyRendererWindow {
     pub fn is_key_down(&self, key: Key) -> bool {
         self.window.is_key_down(key)
     }
+
+    pub fn clear(&mut self) {
+        self.buffer.fill(0);
+    }
 }
 
 impl RenderOutputter for TinyRendererWindow {

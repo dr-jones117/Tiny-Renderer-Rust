@@ -111,8 +111,12 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 impl TinyRenderer<TinyRendererWindow> {
     pub fn new_window(width: usize, height: usize) -> Self {
         let mut window = TinyRendererWindow::new(width, height);
-        window.set_target_fps(60);
+        window.set_target_fps(10);
         TinyRenderer::new(window)
+    }
+
+    pub fn clear(&mut self) {
+        self.render_output.clear();
     }
 
     pub fn is_open(&self) -> bool {

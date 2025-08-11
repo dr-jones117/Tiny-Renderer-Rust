@@ -36,6 +36,9 @@ impl<'a> Config<'a> {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let config = Config::build(&args);
+
     render_meshes_to_image();
 
     let mut window_renderer = TinyRenderer::new_window(800, 800);
@@ -46,11 +49,25 @@ fn main() {
     });
 
     let body_id = window_renderer.add_mesh(body_mesh);
-    window_renderer.set_draw_type(body_id, DrawType::Line);
+    window_renderer.set_draw_type(body_id, DrawType::Fill);
     window_renderer.scale_vertices(body_id, 0.05);
     window_renderer.move_vertices(body_id, 0.0, -1.2);
 
+    // read in a mesh from our obj file
+    let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
+        eprintln!("Error reading in the mesh: {}", err);
+        process::exit(1);
+    });
+
+    // set our renderers verts and faces
+    let head_mesh_id = window_renderer.add_mesh(mesh);
+    window_renderer.set_draw_type(head_mesh_id, DrawType::Line);
+    window_renderer.scale_vertices(head_mesh_id, 0.5);
+
     while window_renderer.is_open() && !window_renderer.is_key_down(Key::Escape) {
+        window_renderer.move_vertices(body_id, 0.0, 0.05);
+
+        window_renderer.clear();
         window_renderer.draw().unwrap_or_else(|err| {
             eprintln!("Error drawing the window: {}", err);
             process::exit(1);
@@ -59,9 +76,9 @@ fn main() {
 }
 
 fn render_meshes_to_image() {
-    // build our configuration
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
+
     let render_output = tga::Image::new(
         "tga/img2.tga",
         800,
