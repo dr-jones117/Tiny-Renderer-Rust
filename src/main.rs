@@ -38,20 +38,20 @@ impl<'a> Config<'a> {
 fn main() {
     render_meshes_to_image();
 
-    let mut window = TinyRenderer::new_window(800, 800);
+    let mut window_renderer = TinyRenderer::new_window(800, 800);
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
 
-    let body_id = window.add_mesh(body_mesh);
-    window.set_draw_type(body_id, DrawType::Line);
-    window.scale_vertices(body_id, 0.05);
-    window.move_vertices(body_id, 0.0, -1.2);
+    let body_id = window_renderer.add_mesh(body_mesh);
+    window_renderer.set_draw_type(body_id, DrawType::Line);
+    window_renderer.scale_vertices(body_id, 0.05);
+    window_renderer.move_vertices(body_id, 0.0, -1.2);
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        window.draw().unwrap_or_else(|err| {
+    while window_renderer.is_open() && !window_renderer.is_key_down(Key::Escape) {
+        window_renderer.draw().unwrap_or_else(|err| {
             eprintln!("Error drawing the window: {}", err);
             process::exit(1);
         });
@@ -63,6 +63,7 @@ fn render_meshes_to_image() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
     let render_output = tga::Image::new(
+        "tga/img2.tga",
         800,
         800,
         tga::ImageType::UncompressedTrueColor,

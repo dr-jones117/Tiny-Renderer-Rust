@@ -63,6 +63,7 @@ impl Header {
 
 #[derive(Debug)]
 pub struct Image {
+    output_path: String,
     color_type: ColorType,
     header: Header,
     data: Vec<u8>,
@@ -104,7 +105,7 @@ impl RenderOutputter for Image {
     }
 
     fn render(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        match self.write_to_file("test.tga") {
+        match self.write_to_file(self.output_path.as_str()) {
             Err(err) => Err(Box::new(err)),
             Ok(()) => Ok(()),
         }
@@ -112,10 +113,17 @@ impl RenderOutputter for Image {
 }
 
 impl Image {
-    pub fn new(width: u16, height: u16, image_type: ImageType, color_type: ColorType) -> Image {
+    pub fn new(
+        output_path: &str,
+        width: u16,
+        height: u16,
+        image_type: ImageType,
+        color_type: ColorType,
+    ) -> Image {
         let data_length =
             (width as u32 * height as u32 * color_type.bytes_per_pixel() as u32) as usize;
         Image {
+            output_path: output_path.to_string(),
             header: Header::new(width, height, &image_type, &color_type),
             color_type,
             data: vec![0; data_length],
