@@ -13,51 +13,19 @@ pub enum DrawType {
     Line,
 }
 
-#[allow(dead_code)]
-pub enum DrawOutput {
-    Tga {
-        file_path: String,
-        width: u16,
-        height: u16,
-    },
-    Window,
-}
-
 pub struct TinyRenderer<T: RenderOutputter> {
     meshes: Vec<Mesh>,
     draw_types: Vec<DrawType>,
-    config: TinyRendererConfig,
     render_output: T,
-}
-
-pub struct TinyRendererConfig {
-    draw_output: DrawOutput,
-}
-
-impl TinyRendererConfig {
-    fn new() -> TinyRendererConfig {
-        TinyRendererConfig {
-            draw_output: DrawOutput::Tga {
-                file_path: String::from(""),
-                width: 800,
-                height: 800,
-            },
-        }
-    }
 }
 
 impl<T: RenderOutputter> TinyRenderer<T> {
     pub fn new(render_output: T) -> TinyRenderer<T> {
         TinyRenderer {
-            config: TinyRendererConfig::new(),
             draw_types: Vec::new(),
             meshes: Vec::new(),
             render_output,
         }
-    }
-
-    pub fn set_draw_output(&mut self, draw_output: DrawOutput) {
-        self.config.draw_output = draw_output;
     }
 
     pub fn add_mesh(&mut self, mesh: Mesh) -> usize {

@@ -8,8 +8,10 @@ use std::process;
 
 use graphics::tga;
 use mesh::Mesh;
-use minifb::{Key, Window, WindowOptions};
-use renderer::{DrawOutput, DrawType, TinyRenderer};
+use minifb::Key;
+use renderer::{DrawType, TinyRenderer};
+
+use crate::graphics::window::TinyRendererWindow;
 
 struct Config<'a> {
     obj_file_path: &'a str,
@@ -36,19 +38,16 @@ impl<'a> Config<'a> {
 }
 
 fn main() {
-    render_meshes_to_image();
+    //render_meshes_to_image();
 
-    //let buffer: Vec<u32> = vec![0; 800 * 600];
-    //let mut window = Window::new("Tiny Renderer", 800, 600, WindowOptions::default())
-    //    .unwrap_or_else(|err| {
-    //        panic!("{}", err);
-    //    });
-    //
-    //window.set_target_fps(60);
-    //
-    //while window.is_open() && !window.is_key_down(Key::Escape) {
-    //    window.update_with_buffer(&buffer, 800, 600).unwrap();
-    //}
+    let mut window = TinyRendererWindow::new(800, 800);
+    window.set_target_fps(60);
+
+    let mut renderer = TinyRenderer::new(&window);
+
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        renderer.draw();
+    }
 }
 
 fn render_meshes_to_image() {
@@ -64,11 +63,6 @@ fn render_meshes_to_image() {
 
     // setup our renderer
     let mut renderer = TinyRenderer::new(render_output);
-    renderer.set_draw_output(DrawOutput::Tga {
-        file_path: config.img_file_path,
-        width: 1000,
-        height: 1000,
-    });
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);

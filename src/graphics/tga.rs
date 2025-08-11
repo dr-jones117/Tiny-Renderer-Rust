@@ -103,7 +103,7 @@ impl RenderOutputter for Image {
         }
     }
 
-    fn render(&self) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         match self.write_to_file("test.tga") {
             Err(err) => Err(Box::new(err)),
             Ok(()) => Ok(()),
