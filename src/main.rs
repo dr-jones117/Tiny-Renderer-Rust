@@ -43,27 +43,24 @@ fn main() {
     renderer.set_draw_type(DrawType::Fill);
     renderer.set_draw_output(DrawOutput::Tga(config.img_file_path));
 
-    let bodyMesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
+    let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
+    let body_mesh_2 = body_mesh.clone();
+    let body_mesh_3 = body_mesh.clone();
 
-    renderer.set_vertices(0, bodyMesh.vertices.clone());
-    renderer.set_faces(0, bodyMesh.faces.clone());
-    renderer.scale_vertices(0, 0.05);
-    renderer.move_vertices(0, 0.0, -1.2);
+    let body_id = renderer.add_mesh(body_mesh);
+    renderer.scale_vertices(body_id, 0.05);
+    renderer.move_vertices(body_id, 0.0, -1.2);
 
+    let body_id_2 = renderer.add_mesh(body_mesh_2);
+    renderer.scale_vertices(body_id_2, 0.1);
+    renderer.move_vertices(body_id_2, -1.0, -1.0);
 
-    renderer.set_vertices(3, bodyMesh.vertices.clone());
-    renderer.set_faces(3, bodyMesh.faces.clone());
-    renderer.scale_vertices(3, 0.1);
-    renderer.move_vertices(3, -1.0, -1.0);
-
-
-    renderer.set_vertices(4, bodyMesh.vertices.clone());
-    renderer.set_faces(4, bodyMesh.faces.clone());
-    renderer.scale_vertices(4, 0.1);
-    renderer.move_vertices(4, 1.0, -1.0);
+    let body_id_3 = renderer.add_mesh(body_mesh_3);
+    renderer.scale_vertices(body_id_3, 0.1);
+    renderer.move_vertices(body_id_3, 1.0, -1.0);
 
     // read in a mesh from our obj file
     let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
@@ -72,10 +69,8 @@ fn main() {
     });
 
     // set our renderers verts and faces
-    renderer.set_vertices(1, mesh.vertices);
-    renderer.set_faces(1, mesh.faces);
-    renderer.scale_vertices(1, 0.5);
-
+    let tri_id = renderer.add_mesh(mesh);
+    renderer.scale_vertices(tri_id, 0.5);
 
     if let Err(err) = renderer.draw() {
         eprintln!("Error rendering mesh: {}", err);

@@ -5,8 +5,6 @@ use crate::mesh::Mesh;
 use crate::tga::{self, ImageCoords};
 use rand::Rng;
 
-static MESH_CAPACITY: usize = 50;
-
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum DrawType {
@@ -43,7 +41,7 @@ impl TinyRenderer {
     pub fn new() -> TinyRenderer {
         TinyRenderer {
             config: TinyRendererConfig::new(),
-            meshes: vec![Mesh::new(); MESH_CAPACITY],
+            meshes: Vec::new(),
         }
     }
 
@@ -55,17 +53,12 @@ impl TinyRenderer {
         self.config.draw_output = draw_output;
     }
 
-    pub fn set_vertices(&mut self, id: usize, vertices: Vec<Vec4<f32>>) {
-        if id > MESH_CAPACITY - 1 {
-            panic!("Out of bounds!");
-        }
-        self.meshes[id].vertices = vertices;
+    pub fn add_mesh(&mut self, mesh: Mesh) -> usize {
+        self.meshes.push(mesh);
+        self.meshes.len() - 1
     }
 
     pub fn scale_vertices(&mut self, id: usize, scale: f32) {
-        if id > MESH_CAPACITY - 1 {
-            panic!("Out of bounds!");
-        }
         for vertice in self.meshes[id].vertices.iter_mut() {
             vertice.x = scale * vertice.x;
             vertice.y = scale * vertice.y;
@@ -74,20 +67,10 @@ impl TinyRenderer {
     }
 
     pub fn move_vertices(&mut self, id: usize, x: f32, y: f32) {
-        if id > MESH_CAPACITY - 1 {
-            panic!("Out of bounds!");
-        }
         for vertice in self.meshes[id].vertices.iter_mut() {
             vertice.x = x + vertice.x;
             vertice.y = y + vertice.y;
         }
-    }
-
-    pub fn set_faces(&mut self, id: usize, faces: Vec<Vec<i32>>) {
-        if id > MESH_CAPACITY - 1 {
-            panic!("Out of bounds!");
-        }
-        self.meshes[id].faces = faces;
     }
 
     pub fn draw(&self) -> Result<(), Box<dyn Error>> {
@@ -200,10 +183,10 @@ fn rasterize_triangle(
     for y in min_y..=max_y {
         for x in min_x..=max_x {
             let p = ImageCoords(x, y);
-            
+
             // Calculate barycentric coordinates
             let (w0, w1, w2) = barycentric_coords(&p, v0, v1, v2);
-            
+
             // Check if point is inside triangle (all barycentric coordinates >= 0)
             if w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 {
                 // Draw the pixel
@@ -214,18 +197,23 @@ fn rasterize_triangle(
 }
 
 // Helper function to calculate barycentric coordinates
-fn barycentric_coords(p: &ImageCoords, v0: &ImageCoords, v1: &ImageCoords, v2: &ImageCoords) -> (f32, f32, f32) {
+fn barycentric_coords(
+    p: &ImageCoords,
+    v0: &ImageCoords,
+    v1: &ImageCoords,
+    v2: &ImageCoords,
+) -> (f32, f32, f32) {
     let denom = ((v1.1 - v2.1) * (v0.0 - v2.0) + (v2.0 - v1.0) * (v0.1 - v2.1)) as f32;
-    
+
     // Handle degenerate triangle
     if denom.abs() < f32::EPSILON {
         return (0.0, 0.0, 0.0);
     }
-    
+
     let w0 = ((v1.1 - v2.1) * (p.0 - v2.0) + (v2.0 - v1.0) * (p.1 - v2.1)) as f32 / denom;
     let w1 = ((v2.1 - v0.1) * (p.0 - v2.0) + (v0.0 - v2.0) * (p.1 - v2.1)) as f32 / denom;
     let w2 = 1.0 - w0 - w1;
-    
+
     (w0, w1, w2)
 }
 

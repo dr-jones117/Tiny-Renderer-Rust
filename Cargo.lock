@@ -126,7 +126,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tga_image"
+name = "tiny_renderer"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
