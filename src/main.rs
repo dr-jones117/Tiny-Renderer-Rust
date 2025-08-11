@@ -51,7 +51,7 @@ fn main() {
     let body_id = window_renderer.add_mesh(body_mesh);
     window_renderer.set_draw_type(body_id, DrawType::Fill);
     window_renderer.scale_vertices(body_id, 0.05);
-    window_renderer.move_vertices(body_id, 0.0, -1.2);
+    window_renderer.move_vertices(body_id, 0.0, 1.2);
 
     // read in a mesh from our obj file
     let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
@@ -65,7 +65,7 @@ fn main() {
     window_renderer.scale_vertices(head_mesh_id, 0.5);
 
     while window_renderer.is_open() && !window_renderer.is_key_down(Key::Escape) {
-        window_renderer.move_vertices(body_id, 0.0, 0.05);
+        window_renderer.move_vertices(body_id, 0.0, -0.05);
 
         window_renderer.clear();
         window_renderer.draw().unwrap_or_else(|err| {

@@ -62,8 +62,18 @@ impl RenderOutputter for TinyRendererWindow {
     }
 
     fn render(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let mut flipped_buffer = vec![0u32; self.buffer.len()];
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let src_index = y * self.width + x;
+                let dst_index = (self.height - 1 - y) * self.width + x; // Flip Y
+                flipped_buffer[dst_index] = self.buffer[src_index];
+            }
+        }
+
         self.window
-            .update_with_buffer(&self.buffer, self.width, self.height)?;
+            .update_with_buffer(&flipped_buffer, self.width, self.height)?;
 
         Ok(())
     }
