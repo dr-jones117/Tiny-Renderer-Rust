@@ -40,7 +40,6 @@ fn main() {
 
     // setup our renderer
     let mut renderer = TinyRenderer::new();
-    renderer.set_draw_type(DrawType::Fill);
     renderer.set_draw_output(DrawOutput::Tga(config.img_file_path));
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
@@ -51,6 +50,7 @@ fn main() {
     let body_mesh_3 = body_mesh.clone();
 
     let body_id = renderer.add_mesh(body_mesh);
+    renderer.set_draw_type(body_id, DrawType::Line);
     renderer.scale_vertices(body_id, 0.05);
     renderer.move_vertices(body_id, 0.0, -1.2);
 
@@ -69,8 +69,9 @@ fn main() {
     });
 
     // set our renderers verts and faces
-    let tri_id = renderer.add_mesh(mesh);
-    renderer.scale_vertices(tri_id, 0.5);
+    let head_mesh_id = renderer.add_mesh(mesh);
+    renderer.set_draw_type(head_mesh_id, DrawType::Line);
+    renderer.scale_vertices(head_mesh_id, 0.5);
 
     if let Err(err) = renderer.draw() {
         eprintln!("Error rendering mesh: {}", err);

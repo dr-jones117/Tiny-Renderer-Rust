@@ -20,18 +20,17 @@ pub enum DrawOutput {
 
 pub struct TinyRenderer {
     meshes: Vec<Mesh>,
+    draw_types: Vec<DrawType>,
     config: TinyRendererConfig,
 }
 
 pub struct TinyRendererConfig {
-    draw_type: DrawType,
     draw_output: DrawOutput,
 }
 
 impl TinyRendererConfig {
     fn new() -> TinyRendererConfig {
         TinyRendererConfig {
-            draw_type: DrawType::Line,
             draw_output: DrawOutput::Tga(String::from("")),
         }
     }
@@ -41,12 +40,9 @@ impl TinyRenderer {
     pub fn new() -> TinyRenderer {
         TinyRenderer {
             config: TinyRendererConfig::new(),
+            draw_types: Vec::new(),
             meshes: Vec::new(),
         }
-    }
-
-    pub fn set_draw_type(&mut self, draw_type: DrawType) {
-        self.config.draw_type = draw_type;
     }
 
     pub fn set_draw_output(&mut self, draw_output: DrawOutput) {
@@ -55,10 +51,15 @@ impl TinyRenderer {
 
     pub fn add_mesh(&mut self, mesh: Mesh) -> usize {
         self.meshes.push(mesh);
+        self.draw_types.push(DrawType::Fill);
         self.meshes.len() - 1
     }
 
     pub fn scale_vertices(&mut self, id: usize, scale: f32) {
+        self.check_mesh_range(&id);
+        if id > self.meshes.len() - 1 {
+            panic!("referencing an invalid mesh");
+        }
         for vertice in self.meshes[id].vertices.iter_mut() {
             vertice.x = scale * vertice.x;
             vertice.y = scale * vertice.y;
@@ -67,10 +68,16 @@ impl TinyRenderer {
     }
 
     pub fn move_vertices(&mut self, id: usize, x: f32, y: f32) {
+        self.check_mesh_range(&id);
         for vertice in self.meshes[id].vertices.iter_mut() {
             vertice.x = x + vertice.x;
             vertice.y = y + vertice.y;
         }
+    }
+
+    pub fn set_draw_type(&mut self, id: usize, draw_type: DrawType) {
+        self.check_mesh_range(&id);
+        self.draw_types[id] = draw_type;
     }
 
     pub fn draw(&self) -> Result<(), Box<dyn Error>> {
@@ -83,6 +90,12 @@ impl TinyRenderer {
             }
         }
         Ok(())
+    }
+
+    fn check_mesh_range(&self, id: &usize) {
+        if *id > self.meshes.len() - 1 {
+            panic!("Error In Renderer: Referencing an invalid mesh.")
+        }
     }
 
     fn write_to_tga_image(&self, img_path: &str) -> Result<(), Box<dyn Error>> {
@@ -98,7 +111,7 @@ impl TinyRenderer {
             tga::ColorType::RGB,
         );
 
-        for mesh in self.meshes.iter() {
+        for (i, mesh) in self.meshes.iter().enumerate() {
             let mut transformed_coords: Vec<ImageCoords> = Vec::new();
 
             for vertice in mesh.vertices.iter() {
@@ -112,7 +125,7 @@ impl TinyRenderer {
                 let v1 = &transformed_coords[face[3] as usize];
                 let v2 = &transformed_coords[face[6] as usize];
 
-                match self.config.draw_type {
+                match &self.draw_types[i] {
                     DrawType::Fill => {
                         rasterize_triangle(v0, v1, v2, &color, &mut image);
                     }
