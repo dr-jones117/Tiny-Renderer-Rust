@@ -3,7 +3,9 @@ use std::error::Error;
 use crate::geometry::Vec4;
 use crate::graphics::color::Color;
 use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
+use crate::graphics::window::TinyRendererWindow;
 use crate::mesh::Mesh;
+use minifb::Key;
 use rand::Rng;
 
 #[allow(dead_code)]
@@ -106,9 +108,25 @@ impl<T: RenderOutputter> TinyRenderer<T> {
     }
 }
 
+impl TinyRenderer<TinyRendererWindow> {
+    pub fn new_window(width: usize, height: usize) -> Self {
+        let mut window = TinyRendererWindow::new(width, height);
+        window.set_target_fps(60);
+        TinyRenderer::new(window)
+    }
+
+    pub fn is_open(&self) -> bool {
+        self.render_output.is_open()
+    }
+
+    pub fn is_key_down(&self, key: Key) -> bool {
+        self.render_output.is_key_down(key)
+    }
+}
+
 fn world_to_output_coordinates(
-    width: u16,
-    height: u16,
+    width: usize,
+    height: usize,
     world_coords: &Vec4<f32>,
 ) -> RenderOutputCoords {
     RenderOutputCoords(

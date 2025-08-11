@@ -11,8 +11,6 @@ use mesh::Mesh;
 use minifb::Key;
 use renderer::{DrawType, TinyRenderer};
 
-use crate::graphics::window::TinyRendererWindow;
-
 struct Config<'a> {
     obj_file_path: &'a str,
     img_file_path: String,
@@ -38,15 +36,25 @@ impl<'a> Config<'a> {
 }
 
 fn main() {
-    //render_meshes_to_image();
+    render_meshes_to_image();
 
-    let mut window = TinyRendererWindow::new(800, 800);
-    window.set_target_fps(60);
+    let mut window = TinyRenderer::new_window(800, 800);
 
-    let mut renderer = TinyRenderer::new(&window);
+    let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
+        eprintln!("Error reading in the mesh: {}", err);
+        process::exit(1);
+    });
+
+    let body_id = window.add_mesh(body_mesh);
+    window.set_draw_type(body_id, DrawType::Line);
+    window.scale_vertices(body_id, 0.05);
+    window.move_vertices(body_id, 0.0, -1.2);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        renderer.draw();
+        window.draw().unwrap_or_else(|err| {
+            eprintln!("Error drawing the window: {}", err);
+            process::exit(1);
+        });
     }
 }
 

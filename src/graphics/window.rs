@@ -3,27 +3,22 @@ use minifb::{Key, WindowOptions};
 use crate::graphics::output::RenderOutputter;
 
 pub struct TinyRendererWindow {
-    width: u16,
-    height: u16,
+    width: usize,
+    height: usize,
     buffer: Vec<u32>,
     window: minifb::Window,
 }
 
 impl TinyRendererWindow {
-    pub fn new(width: u16, height: u16) -> TinyRendererWindow {
+    pub fn new(width: usize, height: usize) -> TinyRendererWindow {
+        let minifb_window =
+            minifb::Window::new("TinyRenderer", width, height, WindowOptions::default()).unwrap();
+
         TinyRendererWindow {
             width,
             height,
-            buffer: vec![0; (width * height) as usize],
-            window: minifb::Window::new(
-                "",
-                width as usize,
-                height as usize,
-                WindowOptions::default(),
-            )
-            .unwrap_or_else(|err| {
-                panic!("Error creating window: {}", err);
-            }),
+            buffer: vec![0; width * height],
+            window: minifb_window,
         }
     }
 
@@ -41,11 +36,11 @@ impl TinyRendererWindow {
 }
 
 impl RenderOutputter for TinyRendererWindow {
-    fn width(&self) -> u16 {
+    fn width(&self) -> usize {
         self.width
     }
 
-    fn height(&self) -> u16 {
+    fn height(&self) -> usize {
         self.height
     }
 
@@ -64,7 +59,7 @@ impl RenderOutputter for TinyRendererWindow {
 
     fn render(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.window
-            .update_with_buffer(&self.buffer, self.width as usize, self.height as usize)?;
+            .update_with_buffer(&self.buffer, self.width, self.height)?;
 
         Ok(())
     }

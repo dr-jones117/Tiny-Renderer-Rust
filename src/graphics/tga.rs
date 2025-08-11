@@ -69,12 +69,12 @@ pub struct Image {
 }
 
 impl RenderOutputter for Image {
-    fn width(&self) -> u16 {
-        self.header.width
+    fn width(&self) -> usize {
+        self.header.width as usize
     }
 
-    fn height(&self) -> u16 {
-        self.header.height
+    fn height(&self) -> usize {
+        self.header.height as usize
     }
 
     fn set(&mut self, x: i32, y: i32, color: &Color) {
