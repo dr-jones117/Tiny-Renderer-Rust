@@ -71,7 +71,7 @@ fn render_window() {
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
-    let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
+    let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
@@ -115,7 +115,7 @@ fn render_meshes_to_image() {
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
-    let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
+    let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
