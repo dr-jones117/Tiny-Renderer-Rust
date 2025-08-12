@@ -1,4 +1,5 @@
 mod algorithms;
+mod builder;
 mod geometry;
 mod graphics;
 mod mesh;
@@ -15,6 +16,8 @@ use renderer::{DrawType, TinyRenderer};
 use crate::algorithms::algorithms::Algorithms;
 use crate::algorithms::line_raster::bresenhams_line_alg;
 use crate::algorithms::triangle_raster::rasterize_triangle;
+use crate::builder::TinyRendererBuilder;
+use crate::graphics::window::TinyRendererWindow;
 
 struct Config<'a> {
     obj_file_path: &'a str,
@@ -46,8 +49,10 @@ fn main() {
 
     render_meshes_to_image();
 
-    let algorithms = Algorithms::new(bresenhams_line_alg, rasterize_triangle);
-    let mut window_renderer = TinyRenderer::new_window(800, 800, algorithms);
+    let mut window_renderer = TinyRendererBuilder::new()
+        .with_render_output(TinyRendererWindow::new(800, 800))
+        .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
+        .build();
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
@@ -84,23 +89,23 @@ fn render_meshes_to_image() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
 
-    let render_output = tga::Image::new(
-        "tga/img2.tga",
-        800,
-        800,
-        tga::ImageType::UncompressedTrueColor,
-        graphics::ColorType::RGB,
-    );
-
-    let algorithms = Algorithms::new(bresenhams_line_alg, rasterize_triangle);
-
     // setup our renderer
-    let mut renderer = TinyRenderer::new(render_output, algorithms);
+    let mut renderer = TinyRendererBuilder::new()
+        .with_render_output(tga::Image::new(
+            "tga/img2.tga",
+            800,
+            800,
+            tga::ImageType::UncompressedTrueColor,
+            graphics::ColorType::RGB,
+        ))
+        .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
+        .build();
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
+
     let body_mesh_2 = body_mesh.clone();
     let body_mesh_3 = body_mesh.clone();
 

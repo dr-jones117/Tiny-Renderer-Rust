@@ -7,7 +7,6 @@ use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
 use crate::graphics::window::TinyRendererWindow;
 use crate::mesh::Mesh;
 use minifb::Key;
-use rand::Rng;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -137,16 +136,6 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 }
 
 impl TinyRenderer<TinyRendererWindow> {
-    pub fn new_window(
-        width: usize,
-        height: usize,
-        algorithms: Algorithms<TinyRendererWindow>,
-    ) -> Self {
-        let mut window = TinyRendererWindow::new(width, height);
-        window.set_target_fps(30);
-        TinyRenderer::new(window, algorithms)
-    }
-
     pub fn clear(&mut self) {
         self.render_output.clear();
     }
