@@ -20,36 +20,51 @@ use algorithms::triangle_raster::rasterize_triangle;
 use renderer::builder::TinyRendererBuilder;
 use renderer::renderer::DrawType;
 
-struct Config<'a> {
-    obj_file_path: &'a str,
-    img_file_path: String,
+static USAGE_STATEMENT: &'static str = "USAGE: tiny_renderer [run_type]";
+
+enum RunType {
+    Window,
+    Image,
 }
 
-impl<'a> Config<'a> {
+struct Config {
+    run_type: RunType,
+}
+
+impl Config {
     pub fn build(args: &Vec<String>) -> Config {
-        let mut obj_file_path = "./obj/african_head.obj";
-        let mut img_file_path = String::from("./tga/img.tga");
-
-        if args.len() >= 2 {
-            obj_file_path = args[1].as_str();
-        }
-        if args.len() >= 3 {
-            img_file_path = args[2].clone();
+        if args.len() != 2 {
+            panic!("{}", USAGE_STATEMENT);
         }
 
-        Config {
-            obj_file_path,
-            img_file_path,
+        let run_type;
+
+        if args[1] == "image" {
+            run_type = RunType::Image;
+        } else if args[1] == "window" {
+            run_type = RunType::Window;
+        } else {
+            panic!("{}", USAGE_STATEMENT);
         }
+
+        Config { run_type }
     }
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
+    match config.run_type {
+        RunType::Window => {
+            render_window();
+        }
+        RunType::Image => {
+            render_meshes_to_image();
+        }
+    }
+}
 
-    render_meshes_to_image();
-
+fn render_window() {
     let mut window_renderer = TinyRendererBuilder::new()
         .with_render_output(TinyRendererWindow::new(800, 800))
         .with_target_fps(50)
@@ -67,7 +82,7 @@ fn main() {
     window_renderer.move_vertices(body_id, 0.0, 1.2);
 
     // read in a mesh from our obj file
-    let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file("./obj/african_head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
@@ -88,9 +103,6 @@ fn main() {
 }
 
 fn render_meshes_to_image() {
-    let args: Vec<String> = env::args().collect();
-    let config = Config::build(&args);
-
     // setup our renderer
     let mut renderer = TinyRendererBuilder::new()
         .with_render_output(tga::Image::new(
@@ -125,7 +137,7 @@ fn render_meshes_to_image() {
     renderer.move_vertices(body_id_3, 1.0, -1.0);
 
     // read in a mesh from our obj file
-    let mesh = Mesh::from_obj_file(config.obj_file_path).unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file("./obj/african_head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
