@@ -1,5 +1,7 @@
 use crate::{
-    algorithms::algorithms::Algorithms, graphics::output::RenderOutputter, renderer::TinyRenderer,
+    algorithms::algorithms::Algorithms,
+    graphics::{output::RenderOutputter, window::TinyRendererWindow},
+    renderer::renderer::TinyRenderer,
 };
 
 pub struct TinyRendererBuilder<T: RenderOutputter> {
@@ -34,5 +36,16 @@ impl<T: RenderOutputter> TinyRendererBuilder<T> {
         });
 
         TinyRenderer::new(render_output, algorithms)
+    }
+}
+
+impl TinyRendererBuilder<TinyRendererWindow> {
+    pub fn with_target_fps(mut self, target_fps: usize) -> TinyRendererBuilder<TinyRendererWindow> {
+        self.render_output
+            .as_mut()
+            .unwrap_or_else(|| panic!("Error setting the target fps."))
+            .set_target_fps(target_fps);
+
+        self
     }
 }

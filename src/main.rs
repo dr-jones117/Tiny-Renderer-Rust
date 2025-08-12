@@ -1,5 +1,4 @@
 mod algorithms;
-mod builder;
 mod geometry;
 mod graphics;
 mod mesh;
@@ -9,15 +8,17 @@ use std::env;
 use std::process;
 
 use graphics::tga;
+use graphics::window::TinyRendererWindow;
+
 use mesh::Mesh;
 use minifb::Key;
-use renderer::{DrawType, TinyRenderer};
 
-use crate::algorithms::algorithms::Algorithms;
-use crate::algorithms::line_raster::bresenhams_line_alg;
-use crate::algorithms::triangle_raster::rasterize_triangle;
-use crate::builder::TinyRendererBuilder;
-use crate::graphics::window::TinyRendererWindow;
+use algorithms::algorithms::Algorithms;
+use algorithms::line_raster::bresenhams_line_alg;
+use algorithms::triangle_raster::rasterize_triangle;
+
+use renderer::builder::TinyRendererBuilder;
+use renderer::renderer::DrawType;
 
 struct Config<'a> {
     obj_file_path: &'a str,
@@ -51,6 +52,7 @@ fn main() {
 
     let mut window_renderer = TinyRendererBuilder::new()
         .with_render_output(TinyRendererWindow::new(800, 800))
+        .with_target_fps(50)
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 

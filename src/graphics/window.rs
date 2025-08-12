@@ -2,6 +2,7 @@ use minifb::{Key, WindowOptions};
 
 use crate::graphics::output::RenderOutputter;
 
+//TODO: make it into a [u8] in the future
 pub struct TinyRendererWindow {
     width: usize,
     height: usize,
