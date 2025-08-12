@@ -1,3 +1,4 @@
+mod algorithms;
 mod geometry;
 mod graphics;
 mod mesh;
@@ -10,6 +11,10 @@ use graphics::tga;
 use mesh::Mesh;
 use minifb::Key;
 use renderer::{DrawType, TinyRenderer};
+
+use crate::algorithms::algorithms::Algorithms;
+use crate::algorithms::line_raster::bresenhams_line_alg;
+use crate::algorithms::triangle_raster::rasterize_triangle;
 
 struct Config<'a> {
     obj_file_path: &'a str,
@@ -41,7 +46,8 @@ fn main() {
 
     render_meshes_to_image();
 
-    let mut window_renderer = TinyRenderer::new_window(800, 800);
+    let algorithms = Algorithms::new(bresenhams_line_alg, rasterize_triangle);
+    let mut window_renderer = TinyRenderer::new_window(800, 800, algorithms);
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
@@ -59,13 +65,12 @@ fn main() {
         process::exit(1);
     });
 
-    // set our renderers verts and faces
     let head_mesh_id = window_renderer.add_mesh(mesh);
     window_renderer.set_draw_type(head_mesh_id, DrawType::Line);
     window_renderer.scale_vertices(head_mesh_id, 0.5);
 
     while window_renderer.is_open() && !window_renderer.is_key_down(Key::Escape) {
-        window_renderer.move_vertices(body_id, 0.0, -0.05);
+        window_renderer.move_vertices(body_id, 0.0, -0.01);
 
         window_renderer.clear();
         window_renderer.draw().unwrap_or_else(|err| {
@@ -87,8 +92,10 @@ fn render_meshes_to_image() {
         graphics::ColorType::RGB,
     );
 
+    let algorithms = Algorithms::new(bresenhams_line_alg, rasterize_triangle);
+
     // setup our renderer
-    let mut renderer = TinyRenderer::new(render_output);
+    let mut renderer = TinyRenderer::new(render_output, algorithms);
 
     let body_mesh = Mesh::from_obj_file("./obj/FinalBaseMesh.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);

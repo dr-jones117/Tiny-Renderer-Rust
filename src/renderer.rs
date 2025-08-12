@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use crate::algorithms::algorithms::Algorithms;
 use crate::geometry::Vec4;
 use crate::graphics::color::Color;
 use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
@@ -19,14 +20,16 @@ pub struct TinyRenderer<T: RenderOutputter> {
     meshes: Vec<Mesh>,
     draw_types: Vec<DrawType>,
     render_output: T,
+    algorithms: Algorithms<T>,
 }
 
 impl<T: RenderOutputter> TinyRenderer<T> {
-    pub fn new(render_output: T) -> TinyRenderer<T> {
+    pub fn new(render_output: T, algorithms: Algorithms<T>) -> TinyRenderer<T> {
         TinyRenderer {
             draw_types: Vec::new(),
             meshes: Vec::new(),
             render_output,
+            algorithms,
         }
     }
 
@@ -62,8 +65,7 @@ impl<T: RenderOutputter> TinyRenderer<T> {
     }
 
     pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
-        //TODO: make sure to new up the outputter when creating the renderer
-
+        //TODO: set the color in the config for line renders
         let color = Color(20, 200, 50, 255);
 
         for (i, mesh) in self.meshes.iter_mut().enumerate() {
@@ -85,13 +87,39 @@ impl<T: RenderOutputter> TinyRenderer<T> {
                 let v2 = &transformed_coords[face[6] as usize];
 
                 match &self.draw_types[i] {
-                    DrawType::Fill => {
-                        rasterize_triangle(v0, v1, v2, &color, &mut self.render_output);
-                    }
+                    DrawType::Fill => (self.algorithms.rasterize_triangle_alg)(
+                        v0,
+                        v1,
+                        v2,
+                        &color,
+                        &mut self.render_output,
+                        self.algorithms.draw_line_alg,
+                    ),
                     DrawType::Line => {
-                        draw_line(v0.0, v0.1, v1.0, v1.1, &color, &mut self.render_output);
-                        draw_line(v1.0, v1.1, v2.0, v2.1, &color, &mut self.render_output);
-                        draw_line(v2.0, v2.1, v0.0, v0.1, &color, &mut self.render_output);
+                        (self.algorithms.draw_line_alg)(
+                            v0.0,
+                            v0.1,
+                            v1.0,
+                            v1.1,
+                            &color,
+                            &mut self.render_output,
+                        );
+                        (self.algorithms.draw_line_alg)(
+                            v1.0,
+                            v1.1,
+                            v2.0,
+                            v2.1,
+                            &color,
+                            &mut self.render_output,
+                        );
+                        (self.algorithms.draw_line_alg)(
+                            v2.0,
+                            v2.1,
+                            v0.0,
+                            v0.1,
+                            &color,
+                            &mut self.render_output,
+                        );
                     }
                 }
             }
@@ -109,10 +137,14 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 }
 
 impl TinyRenderer<TinyRendererWindow> {
-    pub fn new_window(width: usize, height: usize) -> Self {
+    pub fn new_window(
+        width: usize,
+        height: usize,
+        algorithms: Algorithms<TinyRendererWindow>,
+    ) -> Self {
         let mut window = TinyRendererWindow::new(width, height);
-        window.set_target_fps(10);
-        TinyRenderer::new(window)
+        window.set_target_fps(30);
+        TinyRenderer::new(window, algorithms)
     }
 
     pub fn clear(&mut self) {
@@ -137,130 +169,4 @@ fn world_to_output_coordinates(
         ((world_coords.x + 1.0) * width as f32 / 2.0) as i32,
         ((world_coords.y + 1.0) * height as f32 / 2.0) as i32,
     )
-}
-
-fn rasterize_triangle<T>(
-    v0: &RenderOutputCoords,
-    v1: &RenderOutputCoords,
-    v2: &RenderOutputCoords,
-    color: &Color,
-    render_output: &mut T,
-) where
-    T: RenderOutputter,
-{
-    // Early return if triangle is degenerate (all points have same x coordinate)
-    if v0.0 == v1.0 && v0.0 == v2.0 {
-        return;
-    }
-
-    // Sort vertices by y coordinate (v0 has smallest y, v2 has largest y)
-    let (v0, v1, v2) = if v1.1 < v0.1 {
-        (v1, v0, v2)
-    } else {
-        (v0, v1, v2)
-    };
-
-    let (v0, v1, v2) = if v2.1 < v1.1 {
-        (v0, v2, v1)
-    } else {
-        (v0, v1, v2)
-    };
-
-    // Generate random color (keeping your original color generation logic)
-    let mut rng = rand::rng();
-    let red = rng.random_range(0..255);
-    let green = rng.random_range(0..255);
-    let blue = rng.random_range(0..255);
-    let triangle_color = Color(red, green, blue, 255);
-
-    // Get image dimensions
-    let width = render_output.width() as i32;
-    let height = render_output.height() as i32;
-
-    // Find bounding box of the triangle
-    let min_x = (v0.0.min(v1.0).min(v2.0)).max(0);
-    let max_x = (v0.0.max(v1.0).max(v2.0)).min(width - 1);
-    let min_y = (v0.1.min(v1.1).min(v2.1)).max(0);
-    let max_y = (v0.1.max(v1.1).max(v2.1)).min(height - 1);
-
-    // Rasterize using barycentric coordinates
-    for y in min_y..=max_y {
-        for x in min_x..=max_x {
-            let p = RenderOutputCoords(x, y);
-
-            // Calculate barycentric coordinates
-            let (w0, w1, w2) = barycentric_coords(&p, v0, v1, v2);
-
-            // Check if point is inside triangle (all barycentric coordinates >= 0)
-            if w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 {
-                // Draw the pixel
-                draw_line(x, y, x, y, &triangle_color, render_output);
-            }
-        }
-    }
-}
-
-// Helper function to calculate barycentric coordinates
-fn barycentric_coords(
-    p: &RenderOutputCoords,
-    v0: &RenderOutputCoords,
-    v1: &RenderOutputCoords,
-    v2: &RenderOutputCoords,
-) -> (f32, f32, f32) {
-    let denom = ((v1.1 - v2.1) * (v0.0 - v2.0) + (v2.0 - v1.0) * (v0.1 - v2.1)) as f32;
-
-    // Handle degenerate triangle
-    if denom.abs() < f32::EPSILON {
-        return (0.0, 0.0, 0.0);
-    }
-
-    let w0 = ((v1.1 - v2.1) * (p.0 - v2.0) + (v2.0 - v1.0) * (p.1 - v2.1)) as f32 / denom;
-    let w1 = ((v2.1 - v0.1) * (p.0 - v2.0) + (v0.0 - v2.0) * (p.1 - v2.1)) as f32 / denom;
-    let w2 = 1.0 - w0 - w1;
-
-    (w0, w1, w2)
-}
-
-fn draw_line<T>(x0: i32, y0: i32, x1: i32, y1: i32, color: &Color, render_output: &mut T)
-where
-    T: RenderOutputter,
-{
-    let steep = (x1 - x0).abs() < (y1 - y0).abs();
-
-    // transpose it if it's steep
-    let (x0, y0, x1, y1) = if steep {
-        (y0, x0, y1, x1)
-    } else {
-        (x0, y0, x1, y1)
-    };
-
-    // if going right to left, we need to swap the points to go left to right
-    let (x0, y0, x1, y1) = if x0 > x1 {
-        (x1, y1, x0, y0)
-    } else {
-        (x0, y0, x1, y1)
-    };
-
-    let dx = x1 - x0;
-    let dy = y1 - y0;
-
-    let derror = (dy * 2).abs();
-    let mut error = 0;
-    let mut y = y0;
-
-    for x in x0..=x1 {
-        if steep {
-            // detranspose the image
-            render_output.set(y, x, color);
-        } else {
-            render_output.set(x, y, color);
-        }
-
-        error += derror;
-
-        if error > dx {
-            y += if y1 > y0 { 1 } else { -1 };
-            error -= dx * 2;
-        }
-    }
 }
