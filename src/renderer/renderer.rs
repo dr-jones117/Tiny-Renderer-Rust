@@ -6,6 +6,7 @@ use crate::algorithms::Algorithms;
 use crate::geometry::Vec4;
 use crate::graphics::{RenderOutputCoords, RenderOutputter, TinyRendererWindow, color};
 use crate::mesh::Mesh;
+use crate::renderer::DrawingContext;
 
 #[derive(Debug)]
 pub enum DrawType {
@@ -16,17 +17,19 @@ pub enum DrawType {
 pub struct TinyRenderer<T: RenderOutputter> {
     meshes: Vec<Mesh>,
     draw_types: Vec<DrawType>,
-    render_output: T,
-    algorithms: Algorithms<T>,
+    drawing_context: DrawingContext<T>,
 }
 
 impl<T: RenderOutputter> TinyRenderer<T> {
-    pub fn new(render_output: T, algorithms: Algorithms<T>) -> TinyRenderer<T> {
+    pub fn new(render_output: T, algorithms: Algorithms<T>, color: color::RGBA) -> TinyRenderer<T> {
         TinyRenderer {
             draw_types: Vec::new(),
             meshes: Vec::new(),
-            render_output,
-            algorithms,
+            drawing_context: DrawingContext {
+                render_output,
+                algorithms,
+                color,
+            },
         }
     }
 
@@ -62,21 +65,13 @@ impl<T: RenderOutputter> TinyRenderer<T> {
     }
 
     pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
-        //TODO: set the color in the config for line renders
-        let color = color::RGBA {
-            r: 20,
-            g: 200,
-            b: 50,
-            a: 255,
-        };
-
         for (i, mesh) in self.meshes.iter_mut().enumerate() {
             let mut transformed_coords: Vec<RenderOutputCoords> = Vec::new();
 
             for vertice in mesh.vertices.iter() {
                 transformed_coords.push(world_to_output_coordinates(
-                    self.render_output.width(),
-                    self.render_output.height(),
+                    self.drawing_context.render_output.width(),
+                    self.drawing_context.render_output.height(),
                     vertice,
                 ))
             }
@@ -89,45 +84,22 @@ impl<T: RenderOutputter> TinyRenderer<T> {
                 let v2 = &transformed_coords[face[6] as usize];
 
                 match &self.draw_types[i] {
-                    DrawType::Fill => (self.algorithms.rasterize_triangle_alg)(
-                        v0,
-                        v1,
-                        v2,
-                        &color,
-                        &mut self.render_output,
-                        self.algorithms.draw_line_alg,
-                    ),
+                    DrawType::Fill => self.drawing_context.rasterize_triangle(v0, v1, v2),
                     DrawType::Line => {
-                        (self.algorithms.draw_line_alg)(
-                            v0.0,
-                            v0.1,
-                            v1.0,
-                            v1.1,
-                            &color,
-                            &mut self.render_output,
-                        );
-                        (self.algorithms.draw_line_alg)(
-                            v1.0,
-                            v1.1,
-                            v2.0,
-                            v2.1,
-                            &color,
-                            &mut self.render_output,
-                        );
-                        (self.algorithms.draw_line_alg)(
-                            v2.0,
-                            v2.1,
-                            v0.0,
-                            v0.1,
-                            &color,
-                            &mut self.render_output,
-                        );
+                        self.drawing_context.draw_line(v0.x, v0.y, v1.x, v1.y);
+                        self.drawing_context.draw_line(v1.x, v1.y, v2.x, v2.y);
+                        self.drawing_context.draw_line(v2.x, v2.y, v0.x, v0.y);
                     }
                 }
             }
         }
 
-        self.render_output.render()?;
+        self.render()?;
+        Ok(())
+    }
+
+    fn render(&mut self) -> Result<(), Box<dyn Error>> {
+        self.drawing_context.render_output.render()?;
         Ok(())
     }
 
@@ -140,15 +112,15 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 
 impl TinyRenderer<TinyRendererWindow> {
     pub fn clear(&mut self) {
-        self.render_output.clear();
+        self.drawing_context.render_output.clear();
     }
 
     pub fn is_open(&self) -> bool {
-        self.render_output.is_open()
+        self.drawing_context.render_output.is_open()
     }
 
     pub fn is_key_down(&self, key: minifb::Key) -> bool {
-        self.render_output.is_key_down(key)
+        self.drawing_context.render_output.is_key_down(key)
     }
 }
 
@@ -157,8 +129,8 @@ fn world_to_output_coordinates(
     height: usize,
     world_coords: &Vec4<f32>,
 ) -> RenderOutputCoords {
-    RenderOutputCoords(
-        ((world_coords.x + 1.0) * width as f32 / 2.0) as i32,
-        ((world_coords.y + 1.0) * height as f32 / 2.0) as i32,
-    )
+    RenderOutputCoords {
+        x: ((world_coords.x + 1.0) * width as f32 / 2.0) as i32,
+        y: ((world_coords.y + 1.0) * height as f32 / 2.0) as i32,
+    }
 }

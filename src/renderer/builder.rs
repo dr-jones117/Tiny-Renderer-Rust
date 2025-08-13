@@ -1,10 +1,11 @@
 use crate::algorithms::Algorithms;
-use crate::graphics::{RenderOutputter, TinyRendererWindow};
+use crate::graphics::{RenderOutputter, TinyRendererWindow, color};
 use crate::renderer::TinyRenderer;
 
 pub struct TinyRendererBuilder<T: RenderOutputter> {
     render_output: Option<T>,
     algorithms: Option<Algorithms<T>>,
+    color: Option<color::RGBA>,
 }
 
 impl<T: RenderOutputter> TinyRendererBuilder<T> {
@@ -12,6 +13,7 @@ impl<T: RenderOutputter> TinyRendererBuilder<T> {
         TinyRendererBuilder {
             render_output: None,
             algorithms: None,
+            color: None,
         }
     }
 
@@ -25,6 +27,11 @@ impl<T: RenderOutputter> TinyRendererBuilder<T> {
         self
     }
 
+    pub fn with_color(mut self, color: color::RGBA) -> TinyRendererBuilder<T> {
+        self.color = Some(color);
+        self
+    }
+
     pub fn build(self) -> TinyRenderer<T> {
         let render_output = self.render_output.unwrap_or_else(|| {
             panic!("Cannot create a renderer with no output renderer.");
@@ -32,8 +39,17 @@ impl<T: RenderOutputter> TinyRendererBuilder<T> {
         let algorithms = self.algorithms.unwrap_or_else(|| {
             panic!("Cannot create a renderer with no algorithms.");
         });
+        let color = match self.color {
+            Some(t) => t,
+            None => color::RGBA {
+                r: 255,
+                g: 255,
+                b: 255,
+                a: 255,
+            },
+        };
 
-        TinyRenderer::new(render_output, algorithms)
+        TinyRenderer::new(render_output, algorithms, color)
     }
 }
 

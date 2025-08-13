@@ -10,6 +10,7 @@ use std::process;
 use minifb;
 
 use crate::algorithms::{Algorithms, bresenhams_line_alg, rasterize_triangle};
+use crate::graphics::color;
 use crate::graphics::{TinyRendererWindow, tga};
 use crate::mesh::Mesh;
 use crate::renderer::{DrawType, TinyRendererBuilder};
@@ -69,6 +70,12 @@ fn render_window() {
     let mut window_renderer = TinyRendererBuilder::new()
         .with_render_output(TinyRendererWindow::new(WIDTH, HEIGHT))
         .with_target_fps(TARGET_FPS)
+        .with_color(color::RGBA {
+            r: 24,
+            g: 250,
+            b: 20,
+            a: 255,
+        })
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 

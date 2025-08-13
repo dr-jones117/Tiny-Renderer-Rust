@@ -3,7 +3,10 @@ use std::error::Error;
 use crate::graphics::color;
 
 #[derive(Debug)]
-pub struct RenderOutputCoords(pub i32, pub i32);
+pub struct RenderOutputCoords {
+    pub x: i32,
+    pub y: i32,
+}
 
 pub trait RenderOutputter {
     fn width(&self) -> usize;

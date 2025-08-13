@@ -10,19 +10,14 @@ pub fn rasterize_triangle<T>(
 ) where
     T: RenderOutputter,
 {
-    // Early return if triangle is degenerate (all points have same x coordinate)
-    if v0.0 == v1.0 && v0.0 == v2.0 {
-        return;
-    }
-
     // Sort vertices by y coordinate (v0 has smallest y, v2 has largest y)
-    let (v0, v1, v2) = if v1.1 < v0.1 {
+    let (v0, v1, v2) = if v1.y < v0.y {
         (v1, v0, v2)
     } else {
         (v0, v1, v2)
     };
 
-    let (v0, v1, v2) = if v2.1 < v1.1 {
+    let (v0, v1, v2) = if v2.y < v1.y {
         (v0, v2, v1)
     } else {
         (v0, v1, v2)
@@ -33,15 +28,15 @@ pub fn rasterize_triangle<T>(
     let height = render_output.height() as i32;
 
     // Find bounding box of the triangle
-    let min_x = (v0.0.min(v1.0).min(v2.0)).max(0);
-    let max_x = (v0.0.max(v1.0).max(v2.0)).min(width - 1);
-    let min_y = (v0.1.min(v1.1).min(v2.1)).max(0);
-    let max_y = (v0.1.max(v1.1).max(v2.1)).min(height - 1);
+    let min_x = (v0.x.min(v1.x).min(v2.x)).max(0);
+    let max_x = (v0.x.max(v1.x).max(v2.x)).min(width - 1);
+    let min_y = (v0.y.min(v1.y).min(v2.y)).max(0);
+    let max_y = (v0.y.max(v1.y).max(v2.y)).min(height - 1);
 
     // Rasterize using barycentric coordinates
     for y in min_y..=max_y {
         for x in min_x..=max_x {
-            let p = RenderOutputCoords(x, y);
+            let p = RenderOutputCoords { x, y };
 
             // Calculate barycentric coordinates
             let (w0, w1, w2) = barycentric_coords(&p, v0, v1, v2);
@@ -61,15 +56,15 @@ fn barycentric_coords(
     v1: &RenderOutputCoords,
     v2: &RenderOutputCoords,
 ) -> (f32, f32, f32) {
-    let denom = ((v1.1 - v2.1) * (v0.0 - v2.0) + (v2.0 - v1.0) * (v0.1 - v2.1)) as f32;
+    let denom = ((v1.y - v2.y) * (v0.x - v2.x) + (v2.x - v1.x) * (v0.y - v2.y)) as f32;
 
     // Handle degenerate triangle
     if denom.abs() < f32::EPSILON {
         return (0.0, 0.0, 0.0);
     }
 
-    let w0 = ((v1.1 - v2.1) * (p.0 - v2.0) + (v2.0 - v1.0) * (p.1 - v2.1)) as f32 / denom;
-    let w1 = ((v2.1 - v0.1) * (p.0 - v2.0) + (v0.0 - v2.0) * (p.1 - v2.1)) as f32 / denom;
+    let w0 = ((v1.y - v2.y) * (p.x - v2.x) + (v2.x - v1.x) * (p.y - v2.y)) as f32 / denom;
+    let w1 = ((v2.y - v0.y) * (p.x - v2.x) + (v0.x - v2.x) * (p.y - v2.y)) as f32 / denom;
     let w2 = 1.0 - w0 - w1;
 
     (w0, w1, w2)
