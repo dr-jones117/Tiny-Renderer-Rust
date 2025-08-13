@@ -50,6 +50,7 @@ impl Config {
 }
 
 //TODO: Read over rasterize_triangle for a better understanding
+//TODO: fix the triangle rasterization not working on some obj meshes
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
@@ -79,10 +80,10 @@ fn render_window() {
     let body_id = window_renderer.add_mesh(body_mesh);
     window_renderer.set_draw_type(body_id, DrawType::Fill);
     window_renderer.scale_vertices(body_id, 0.05);
-    window_renderer.move_vertices(body_id, 0.0, 1.2);
+    window_renderer.move_vertices(body_id, 0.0, 1.0);
 
     // read in a mesh from our obj file
-    let mesh = Mesh::from_obj_file("./obj/african_head.obj").unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file("./obj/head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
@@ -136,7 +137,7 @@ fn render_meshes_to_image() {
     renderer.move_vertices(body_id_3, 1.0, -1.0);
 
     // read in a mesh from our obj file
-    let mesh = Mesh::from_obj_file("./obj/african_head.obj").unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file("./obj/head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
