@@ -9,18 +9,16 @@ use std::process;
 
 use minifb;
 
-use crate::graphics::tga;
-use crate::graphics::window::TinyRendererWindow;
-
+use crate::algorithms::{Algorithms, bresenhams_line_alg, rasterize_triangle};
+use crate::graphics::{TinyRendererWindow, tga};
 use crate::mesh::Mesh;
-
-use crate::algorithms::algorithms::Algorithms;
-use crate::algorithms::line_raster::bresenhams_line_alg;
-use crate::algorithms::triangle_raster::rasterize_triangle;
-
 use crate::renderer::{DrawType, TinyRendererBuilder};
 
 static USAGE_STATEMENT: &'static str = "USAGE: tiny_renderer [run_type]";
+
+const WIDTH: usize = 800;
+const HEIGHT: usize = 800;
+const TARGET_FPS: usize = 60;
 
 enum RunType {
     Window,
@@ -51,9 +49,11 @@ impl Config {
     }
 }
 
+//TODO: Read over rasterize_triangle for a better understanding
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
+
     match config.run_type {
         RunType::Window => {
             render_window();
@@ -66,8 +66,8 @@ fn main() {
 
 fn render_window() {
     let mut window_renderer = TinyRendererBuilder::new()
-        .with_render_output(TinyRendererWindow::new(800, 800))
-        .with_target_fps(50)
+        .with_render_output(TinyRendererWindow::new(WIDTH, HEIGHT))
+        .with_target_fps(TARGET_FPS)
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
@@ -106,8 +106,8 @@ fn render_meshes_to_image() {
     let mut renderer = TinyRendererBuilder::new()
         .with_render_output(tga::Image::new(
             "tga/img2.tga",
-            800,
-            800,
+            WIDTH as u16,
+            HEIGHT as u16,
             tga::ImageType::UncompressedTrueColor,
             tga::ColorType::RGB,
         ))

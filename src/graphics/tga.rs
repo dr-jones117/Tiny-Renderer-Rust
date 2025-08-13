@@ -1,8 +1,11 @@
-use crate::graphics::{color, output::RenderOutputter};
-use bytemuck::{Pod, Zeroable};
 use std::{fs::File, io::Write, path::Path};
 
+use bytemuck::{Pod, Zeroable};
+
+use crate::graphics::{RenderOutputter, color};
+
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum ColorType {
     RGB,
     RGBA,

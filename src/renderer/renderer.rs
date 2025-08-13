@@ -1,12 +1,11 @@
 use std::error::Error;
 
-use crate::algorithms::algorithms::Algorithms;
-use crate::geometry::Vec4;
-use crate::graphics::color;
-use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
-use crate::graphics::window::TinyRendererWindow;
-use crate::mesh::Mesh;
 use minifb;
+
+use crate::algorithms::Algorithms;
+use crate::geometry::Vec4;
+use crate::graphics::{RenderOutputCoords, RenderOutputter, TinyRendererWindow, color};
+use crate::mesh::Mesh;
 
 #[derive(Debug)]
 pub enum DrawType {

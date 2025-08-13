@@ -1,9 +1,4 @@
-use rand::Rng;
-
-use crate::graphics::{
-    color,
-    output::{RenderOutputCoords, RenderOutputter},
-};
+use crate::graphics::{RenderOutputCoords, RenderOutputter, color};
 
 pub fn rasterize_triangle<T>(
     v0: &RenderOutputCoords,
@@ -33,18 +28,6 @@ pub fn rasterize_triangle<T>(
         (v0, v1, v2)
     };
 
-    // Generate random color (keeping your original color generation logic)
-    let mut rng = rand::rng();
-    let red = rng.random_range(0..255);
-    let green = rng.random_range(0..255);
-    let blue = rng.random_range(0..255);
-    let triangle_color = color::RGBA {
-        r: red,
-        g: green,
-        b: blue,
-        a: 255,
-    };
-
     // Get image dimensions
     let width = render_output.width() as i32;
     let height = render_output.height() as i32;
@@ -66,7 +49,7 @@ pub fn rasterize_triangle<T>(
             // Check if point is inside triangle (all barycentric coordinates >= 0)
             if w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 {
                 // Draw the pixel
-                draw_line_alg(x, y, x, y, &triangle_color, render_output);
+                draw_line_alg(x, y, x, y, &color, render_output);
             }
         }
     }

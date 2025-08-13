@@ -1,4 +1,3 @@
-use core::f32;
 use std::error::Error;
 use std::fs;
 

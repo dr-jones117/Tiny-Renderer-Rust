@@ -1,8 +1,6 @@
-use crate::{
-    algorithms::algorithms::Algorithms,
-    graphics::{output::RenderOutputter, window::TinyRendererWindow},
-    renderer::renderer::TinyRenderer,
-};
+use crate::algorithms::Algorithms;
+use crate::graphics::{RenderOutputter, TinyRendererWindow};
+use crate::renderer::TinyRenderer;
 
 pub struct TinyRendererBuilder<T: RenderOutputter> {
     render_output: Option<T>,
