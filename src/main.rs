@@ -71,9 +71,9 @@ fn render_window() {
         .with_render_output(TinyRendererWindow::new(WIDTH, HEIGHT))
         .with_target_fps(TARGET_FPS)
         .with_color(color::RGBA {
-            r: 24,
-            g: 250,
-            b: 20,
+            r: 174,
+            g: 50,
+            b: 220,
             a: 255,
         })
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
@@ -119,6 +119,7 @@ fn render_meshes_to_image() {
             tga::ImageType::UncompressedTrueColor,
             tga::ColorType::RGB,
         ))
+        .with_color(color::RED)
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
