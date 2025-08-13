@@ -67,6 +67,7 @@ fn main() {
 }
 
 fn render_window() {
+    // create our window renderer with specific configuration using the builder pattern
     let mut window_renderer = TinyRendererBuilder::new()
         .with_render_output(TinyRendererWindow::new(WIDTH, HEIGHT))
         .with_target_fps(TARGET_FPS)
@@ -79,17 +80,19 @@ fn render_window() {
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
+    // load our mesh into memory
     let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
 
+    // add the mesh into the renderer, getting back it's id
     let body_id = window_renderer.add_mesh(body_mesh);
     window_renderer.set_draw_type(body_id, DrawType::Fill);
     window_renderer.scale_vertices(body_id, 0.05);
     window_renderer.move_vertices(body_id, 0.0, 1.0);
 
-    // read in a mesh from our obj file
+    // ok, now do it again
     let mesh = Mesh::from_obj_file("./obj/head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
@@ -103,6 +106,8 @@ fn render_window() {
         window_renderer.move_vertices(body_id, 0.0, -0.01);
 
         window_renderer.clear();
+
+        // wow!
         window_renderer.draw().unwrap_or_else(|err| {
             eprintln!("Error drawing the window: {}", err);
             process::exit(1);
