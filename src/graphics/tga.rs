@@ -1,9 +1,23 @@
-use crate::graphics::{
-    color::{ColorType, RGBA},
-    output::RenderOutputter,
-};
+use crate::graphics::{color, output::RenderOutputter};
 use bytemuck::{Pod, Zeroable};
 use std::{fs::File, io::Write, path::Path};
+
+#[derive(Debug)]
+pub enum ColorType {
+    RGB,
+    RGBA,
+    GrayScale,
+}
+
+impl ColorType {
+    fn bytes_per_pixel(&self) -> u8 {
+        match self {
+            ColorType::GrayScale => 1,
+            ColorType::RGB => 3,
+            ColorType::RGBA => 4,
+        }
+    }
+}
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -78,7 +92,7 @@ impl RenderOutputter for Image {
         self.header.height as usize
     }
 
-    fn set(&mut self, x: i32, y: i32, color: &RGBA) {
+    fn set(&mut self, x: i32, y: i32, color: &color::RGBA) {
         let width = self.width() as i32;
         let height = self.height() as i32;
 

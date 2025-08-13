@@ -6,7 +6,7 @@ use crate::graphics::color;
 use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
 use crate::graphics::window::TinyRendererWindow;
 use crate::mesh::Mesh;
-use minifb::Key;
+use minifb;
 
 #[derive(Debug)]
 pub enum DrawType {
@@ -148,7 +148,7 @@ impl TinyRenderer<TinyRendererWindow> {
         self.render_output.is_open()
     }
 
-    pub fn is_key_down(&self, key: Key) -> bool {
+    pub fn is_key_down(&self, key: minifb::Key) -> bool {
         self.render_output.is_key_down(key)
     }
 }

@@ -2,7 +2,7 @@ use core::f32;
 use std::error::Error;
 use std::fs;
 
-use super::geometry::{Vec3, Vec4};
+use crate::geometry::{Vec3, Vec4};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -117,6 +117,6 @@ impl Mesh {
             a = tokens[4].parse()?;
         }
 
-        Ok(Vec4 { x, y, z, a })
+        Ok(Vec4 { x, y, z, w: a })
     }
 }

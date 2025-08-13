@@ -7,18 +7,18 @@ mod renderer;
 use std::env;
 use std::process;
 
-use graphics::tga;
-use graphics::window::TinyRendererWindow;
+use minifb;
 
-use mesh::Mesh;
-use minifb::Key;
+use crate::graphics::tga;
+use crate::graphics::window::TinyRendererWindow;
 
-use algorithms::algorithms::Algorithms;
-use algorithms::line_raster::bresenhams_line_alg;
-use algorithms::triangle_raster::rasterize_triangle;
+use crate::mesh::Mesh;
 
-use renderer::builder::TinyRendererBuilder;
-use renderer::renderer::DrawType;
+use crate::algorithms::algorithms::Algorithms;
+use crate::algorithms::line_raster::bresenhams_line_alg;
+use crate::algorithms::triangle_raster::rasterize_triangle;
+
+use crate::renderer::{DrawType, TinyRendererBuilder};
 
 static USAGE_STATEMENT: &'static str = "USAGE: tiny_renderer [run_type]";
 
@@ -91,7 +91,7 @@ fn render_window() {
     window_renderer.set_draw_type(head_mesh_id, DrawType::Line);
     window_renderer.scale_vertices(head_mesh_id, 0.5);
 
-    while window_renderer.is_open() && !window_renderer.is_key_down(Key::Escape) {
+    while window_renderer.is_open() && !window_renderer.is_key_down(minifb::Key::Escape) {
         window_renderer.move_vertices(body_id, 0.0, -0.01);
 
         window_renderer.clear();
@@ -109,7 +109,7 @@ fn render_meshes_to_image() {
             800,
             800,
             tga::ImageType::UncompressedTrueColor,
-            graphics::ColorType::RGB,
+            tga::ColorType::RGB,
         ))
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();

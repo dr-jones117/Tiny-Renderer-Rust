@@ -12,7 +12,7 @@ pub struct Vec4<T> {
     pub x: T,
     pub y: T,
     pub z: T,
-    pub a: T,
+    pub w: T,
 }
 
 impl<T: Copy> Vec3<T> {
@@ -55,7 +55,7 @@ impl<T: Add<Output = T> + Mul<Output = T> + Copy> Mul for &Vec3<T> {
 
 impl<T: Copy> Vec4<T> {
     pub fn new(x: T, y: T, z: T, a: T) -> Vec4<T> {
-        Vec4 { x, y, z, a }
+        Vec4 { x, y, z, w: a }
     }
 }
 
@@ -67,7 +67,7 @@ impl<T: Add<Output = T> + Copy> Add for &Vec4<T> {
             x: self.x + other.x,
             y: self.y + other.y,
             z: self.z + other.z,
-            a: self.a + other.a,
+            w: self.w + other.w,
         }
     }
 }
@@ -80,7 +80,7 @@ impl<T: Sub<Output = T> + Copy> Sub for &Vec4<T> {
             x: self.x - other.x,
             y: self.y - other.y,
             z: self.z - other.z,
-            a: self.a - other.a,
+            w: self.w - other.w,
         }
     }
 }
@@ -89,6 +89,6 @@ impl<T: Add<Output = T> + Mul<Output = T> + Copy> Mul for &Vec4<T> {
     type Output = T;
 
     fn mul(self, other: Self) -> T {
-        (self.x * other.x) + (self.y * other.y) + (self.z * other.z) + (self.a * other.a)
+        (self.x * other.x) + (self.y * other.y) + (self.z * other.z) + (self.w * other.w)
     }
 }

@@ -1,11 +1,11 @@
-use crate::graphics::{color::RGBA, output::RenderOutputter};
+use crate::graphics::{color, output::RenderOutputter};
 
 pub fn bresenhams_line_alg<T>(
     x0: i32,
     y0: i32,
     x1: i32,
     y1: i32,
-    color: &RGBA,
+    color: &color::RGBA,
     render_output: &mut T,
 ) where
     T: RenderOutputter,
