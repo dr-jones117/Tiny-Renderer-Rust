@@ -6,6 +6,7 @@ pub struct RGBA {
     pub a: u8,
 }
 
+#[allow(dead_code)]
 pub const RED: RGBA = RGBA {
     r: 255,
     g: 0,
@@ -26,5 +27,13 @@ pub const BLUE: RGBA = RGBA {
     r: 0,
     g: 0,
     b: 255,
+    a: 255,
+};
+
+#[allow(dead_code)]
+pub const PURPEL: RGBA = RGBA {
+    r: 174,
+    g: 50,
+    b: 220,
     a: 255,
 };

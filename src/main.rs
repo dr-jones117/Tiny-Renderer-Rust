@@ -10,16 +10,19 @@ use std::process;
 use minifb;
 
 use crate::algorithms::{Algorithms, bresenhams_line_alg, rasterize_triangle};
+
 use crate::graphics::color;
 use crate::graphics::{TinyRendererWindow, tga};
+
 use crate::mesh::Mesh;
+
 use crate::renderer::{DrawType, TinyRendererBuilder};
 
 static USAGE_STATEMENT: &'static str = "USAGE: tiny_renderer [run_type]";
 
 const WIDTH: usize = 800;
 const HEIGHT: usize = 800;
-const TARGET_FPS: usize = 60;
+const TARGET_FPS: usize = 120;
 
 enum RunType {
     Window,
@@ -71,12 +74,7 @@ fn render_window() {
     let mut window_renderer = TinyRendererBuilder::new()
         .with_render_output(TinyRendererWindow::new(WIDTH, HEIGHT))
         .with_target_fps(TARGET_FPS)
-        .with_color(color::RGBA {
-            r: 174,
-            g: 50,
-            b: 220,
-            a: 255,
-        })
+        .with_color(color::PURPEL)
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
@@ -116,6 +114,7 @@ fn render_window() {
 }
 
 fn render_meshes_to_image() {
+    // create a renderer with a tga image output instead of a window
     let mut renderer = TinyRendererBuilder::new()
         .with_render_output(tga::Image::new(
             "tga/img2.tga",
@@ -124,7 +123,6 @@ fn render_meshes_to_image() {
             tga::ImageType::UncompressedTrueColor,
             tga::ColorType::RGB,
         ))
-        .with_color(color::RED)
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
@@ -136,6 +134,7 @@ fn render_meshes_to_image() {
     let body_mesh_2 = body_mesh.clone();
     let body_mesh_3 = body_mesh.clone();
 
+    // bring in more meshes!
     let body_id = renderer.add_mesh(body_mesh);
     renderer.set_draw_type(body_id, DrawType::Line);
     renderer.scale_vertices(body_id, 0.05);
@@ -155,11 +154,11 @@ fn render_meshes_to_image() {
         process::exit(1);
     });
 
-    // set our renderers verts and faces
     let head_mesh_id = renderer.add_mesh(mesh);
     renderer.set_draw_type(head_mesh_id, DrawType::Line);
     renderer.scale_vertices(head_mesh_id, 0.5);
 
+    // call our draw function once since it's just a single image
     if let Err(err) = renderer.draw() {
         eprintln!("Error rendering mesh: {}", err);
         process::exit(1);
