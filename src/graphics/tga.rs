@@ -1,5 +1,5 @@
 use crate::graphics::{
-    color::{Color, ColorType},
+    color::{ColorType, RGBA},
     output::RenderOutputter,
 };
 use bytemuck::{Pod, Zeroable};
@@ -78,7 +78,7 @@ impl RenderOutputter for Image {
         self.header.height as usize
     }
 
-    fn set(&mut self, x: i32, y: i32, color: &Color) {
+    fn set(&mut self, x: i32, y: i32, color: &RGBA) {
         let width = self.width() as i32;
         let height = self.height() as i32;
 
@@ -94,9 +94,9 @@ impl RenderOutputter for Image {
                 panic!("unimplemented GrayScale in tga image set");
             }
             ColorType::RGB => {
-                self.data[start] = color.2;
-                self.data[start + 1] = color.1;
-                self.data[start + 2] = color.0;
+                self.data[start] = color.b;
+                self.data[start + 1] = color.g;
+                self.data[start + 2] = color.r;
             }
             ColorType::RGBA => {
                 panic!("unimplemented RGBA in tga image set");

@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use crate::graphics::{
-    color::Color,
+    color,
     output::{RenderOutputCoords, RenderOutputter},
 };
 
@@ -9,9 +9,9 @@ pub fn rasterize_triangle<T>(
     v0: &RenderOutputCoords,
     v1: &RenderOutputCoords,
     v2: &RenderOutputCoords,
-    color: &Color,
+    color: &color::RGBA,
     render_output: &mut T,
-    draw_line_alg: fn(i32, i32, i32, i32, &Color, &mut T),
+    draw_line_alg: fn(i32, i32, i32, i32, &color::RGBA, &mut T),
 ) where
     T: RenderOutputter,
 {
@@ -38,7 +38,12 @@ pub fn rasterize_triangle<T>(
     let red = rng.random_range(0..255);
     let green = rng.random_range(0..255);
     let blue = rng.random_range(0..255);
-    let triangle_color = Color(red, green, blue, 255);
+    let triangle_color = color::RGBA {
+        r: red,
+        g: green,
+        b: blue,
+        a: 255,
+    };
 
     // Get image dimensions
     let width = render_output.width() as i32;

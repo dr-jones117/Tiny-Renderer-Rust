@@ -1,5 +1,10 @@
 #[allow(dead_code)]
-pub struct Color(pub u8, pub u8, pub u8, pub u8);
+pub struct RGBA {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
 
 #[allow(dead_code)]
 #[derive(Debug)]

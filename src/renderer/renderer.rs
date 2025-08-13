@@ -2,13 +2,12 @@ use std::error::Error;
 
 use crate::algorithms::algorithms::Algorithms;
 use crate::geometry::Vec4;
-use crate::graphics::color::Color;
+use crate::graphics::color;
 use crate::graphics::output::{RenderOutputCoords, RenderOutputter};
 use crate::graphics::window::TinyRendererWindow;
 use crate::mesh::Mesh;
 use minifb::Key;
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum DrawType {
     Fill,
@@ -65,7 +64,12 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 
     pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
         //TODO: set the color in the config for line renders
-        let color = Color(20, 200, 50, 255);
+        let color = color::RGBA {
+            r: 20,
+            g: 200,
+            b: 50,
+            a: 255,
+        };
 
         for (i, mesh) in self.meshes.iter_mut().enumerate() {
             let mut transformed_coords: Vec<RenderOutputCoords> = Vec::new();

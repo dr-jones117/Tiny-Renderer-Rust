@@ -1,6 +1,6 @@
 use minifb::{Key, WindowOptions};
 
-use crate::graphics::output::RenderOutputter;
+use crate::graphics::{color::RGBA, output::RenderOutputter};
 
 //TODO: make it into a [u8] in the future
 pub struct TinyRendererWindow {
@@ -49,15 +49,15 @@ impl RenderOutputter for TinyRendererWindow {
         self.height
     }
 
-    fn set(&mut self, x: i32, y: i32, color: &super::color::Color) {
+    fn set(&mut self, x: i32, y: i32, color: &RGBA) {
         if x < 0 || x >= self.width as i32 || y < 0 || y >= self.height as i32 {
             return;
         }
 
-        let rgba_u32 = ((color.3 as u32) << 24) | // Alpha
-                   ((color.0 as u32) << 16) | // Red
-                   ((color.1 as u32) << 8)  | // Green
-                   (color.2 as u32); // Blue
+        let rgba_u32 = ((color.a as u32) << 24) | // Alpha
+                   ((color.r as u32) << 16) | // Red
+                   ((color.g as u32) << 8)  | // Green
+                   (color.b as u32); // Blue
 
         self.buffer[(y * self.width as i32 + x) as usize] = rgba_u32;
     }

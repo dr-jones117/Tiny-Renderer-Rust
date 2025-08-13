@@ -103,7 +103,6 @@ fn render_window() {
 }
 
 fn render_meshes_to_image() {
-    // setup our renderer
     let mut renderer = TinyRendererBuilder::new()
         .with_render_output(tga::Image::new(
             "tga/img2.tga",

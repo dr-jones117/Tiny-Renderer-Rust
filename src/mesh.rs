@@ -14,6 +14,7 @@ pub struct Mesh {
 }
 
 impl Mesh {
+    #[allow(dead_code)]
     pub fn new() -> Mesh {
         Mesh {
             vertices: Vec::new(),
@@ -22,6 +23,7 @@ impl Mesh {
             faces: Vec::new(),
         }
     }
+
     pub fn from_obj_file(obj_file_path: &str) -> Result<Mesh, Box<dyn Error>> {
         let obj_content = fs::read_to_string(obj_file_path)?;
         let mut vertices: Vec<Vec4<f32>> = Vec::new();
