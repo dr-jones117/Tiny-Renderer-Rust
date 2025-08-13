@@ -108,7 +108,7 @@ impl RenderOutputter for Image {
 
         match self.color_type {
             ColorType::GrayScale => {
-                panic!("unimplemented GrayScale in tga image set");
+                self.data[start] = color.a;
             }
             ColorType::RGB => {
                 self.data[start] = color.b;
@@ -116,7 +116,10 @@ impl RenderOutputter for Image {
                 self.data[start + 2] = color.r;
             }
             ColorType::RGBA => {
-                panic!("unimplemented RGBA in tga image set");
+                self.data[start] = color.a;
+                self.data[start + 1] = color.b;
+                self.data[start + 2] = color.g;
+                self.data[start + 3] = color.r;
             }
         }
     }
