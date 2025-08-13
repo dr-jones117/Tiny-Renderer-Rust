@@ -17,7 +17,7 @@ pub enum DrawType {
 pub struct TinyRenderer<T: RenderOutputter> {
     meshes: Vec<Mesh>,
     draw_types: Vec<DrawType>,
-    drawing_context: DrawingContext<T>,
+    drawing_ctx: DrawingContext<T>,
 }
 
 impl<T: RenderOutputter> TinyRenderer<T> {
@@ -25,7 +25,7 @@ impl<T: RenderOutputter> TinyRenderer<T> {
         TinyRenderer {
             draw_types: Vec::new(),
             meshes: Vec::new(),
-            drawing_context: DrawingContext {
+            drawing_ctx: DrawingContext {
                 render_output,
                 algorithms,
                 color,
@@ -70,8 +70,8 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 
             for vertice in mesh.vertices.iter() {
                 transformed_coords.push(world_to_output_coordinates(
-                    self.drawing_context.render_output.width(),
-                    self.drawing_context.render_output.height(),
+                    self.drawing_ctx.render_output.width(),
+                    self.drawing_ctx.render_output.height(),
                     vertice,
                 ))
             }
@@ -84,22 +84,17 @@ impl<T: RenderOutputter> TinyRenderer<T> {
                 let v2 = &transformed_coords[face[6] as usize];
 
                 match &self.draw_types[i] {
-                    DrawType::Fill => self.drawing_context.rasterize_triangle(v0, v1, v2),
+                    DrawType::Fill => self.drawing_ctx.rasterize_triangle(v0, v1, v2),
                     DrawType::Line => {
-                        self.drawing_context.draw_line(v0.x, v0.y, v1.x, v1.y);
-                        self.drawing_context.draw_line(v1.x, v1.y, v2.x, v2.y);
-                        self.drawing_context.draw_line(v2.x, v2.y, v0.x, v0.y);
+                        self.drawing_ctx.draw_line(v0.x, v0.y, v1.x, v1.y);
+                        self.drawing_ctx.draw_line(v1.x, v1.y, v2.x, v2.y);
+                        self.drawing_ctx.draw_line(v2.x, v2.y, v0.x, v0.y);
                     }
                 }
             }
         }
 
-        self.render()?;
-        Ok(())
-    }
-
-    fn render(&mut self) -> Result<(), Box<dyn Error>> {
-        self.drawing_context.render_output.render()?;
+        self.drawing_ctx.render_output.render()?;
         Ok(())
     }
 
@@ -112,15 +107,15 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 
 impl TinyRenderer<TinyRendererWindow> {
     pub fn clear(&mut self) {
-        self.drawing_context.render_output.clear();
+        self.drawing_ctx.render_output.clear();
     }
 
     pub fn is_open(&self) -> bool {
-        self.drawing_context.render_output.is_open()
+        self.drawing_ctx.render_output.is_open()
     }
 
     pub fn is_key_down(&self, key: minifb::Key) -> bool {
-        self.drawing_context.render_output.is_key_down(key)
+        self.drawing_ctx.render_output.is_key_down(key)
     }
 }
 
