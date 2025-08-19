@@ -9,6 +9,7 @@ use std::process;
 
 use minifb;
 
+use crate::algorithms::line_alg_with_floats;
 use crate::algorithms::{Algorithms, bresenhams_line_alg, rasterize_triangle};
 
 use crate::graphics::color;
@@ -123,7 +124,7 @@ fn render_meshes_to_image() {
             tga::ImageType::UncompressedTrueColor,
             tga::ColorType::RGB,
         ))
-        .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
+        .with_algorithms(Algorithms::new(line_alg_with_floats, rasterize_triangle))
         .build();
 
     let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
