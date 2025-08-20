@@ -1,4 +1,9 @@
-use crate::graphics::{RenderOutputCoords, RenderOutputter, color};
+use std::collections::HashMap;
+
+use crate::{
+    algorithms::line_raster::bresenhams_line_map,
+    graphics::{RenderOutputCoords, RenderOutputter, color},
+};
 
 pub fn rasterize_triangle<T>(
     v0: &RenderOutputCoords,
@@ -68,4 +73,27 @@ fn barycentric_coords(
     let w2 = 1.0 - w0 - w1;
 
     (w0, w1, w2)
+}
+
+pub fn rasterize_triangle_scanline<T>(
+    v0: &RenderOutputCoords,
+    v1: &RenderOutputCoords,
+    v2: &RenderOutputCoords,
+    color: &color::RGBA,
+    render_output: &mut T,
+    draw_line_alg: fn(i32, i32, i32, i32, &color::RGBA, &mut T),
+) where
+    T: RenderOutputter,
+{
+    let mut y_to_xs: HashMap<i32, Vec<i32>> = HashMap::new();
+    // 'draw' all three triangles.
+    // instead of drawing them, just save every single y and x coord using bresenhams
+    // does it make sense to reuse bresenhams line alg from here?
+    bresenhams_line_map(v0.x, v0.y, v1.x, v1.y, &mut y_to_xs);
+    bresenhams_line_map(v1.x, v1.y, v2.x, v2.y, &mut y_to_xs);
+    bresenhams_line_map(v2.x, v2.y, v0.x, v0.y, &mut y_to_xs);
+
+    for (y, vec) in y_to_xs.iter() {
+        draw_line_alg(vec[0], *y, vec[vec.len() - 1], *y, color, render_output);
+    }
 }

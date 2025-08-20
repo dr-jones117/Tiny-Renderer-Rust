@@ -8,10 +8,13 @@ use std::env;
 use std::process;
 
 use minifb;
+use rand::Rng;
 
 use crate::algorithms::line_alg_with_floats;
+use crate::algorithms::triangle_raster::rasterize_triangle_scanline;
 use crate::algorithms::{Algorithms, bresenhams_line_alg, rasterize_triangle};
 
+use crate::geometry::Vec4;
 use crate::graphics::color;
 use crate::graphics::{TinyRendererWindow, tga};
 
@@ -124,7 +127,10 @@ fn render_meshes_to_image() {
             tga::ImageType::UncompressedTrueColor,
             tga::ColorType::RGB,
         ))
-        .with_algorithms(Algorithms::new(line_alg_with_floats, rasterize_triangle))
+        .with_algorithms(Algorithms::new(
+            line_alg_with_floats,
+            rasterize_triangle_scanline,
+        ))
         .build();
 
     let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
@@ -137,7 +143,7 @@ fn render_meshes_to_image() {
 
     // bring in more meshes!
     let body_id = renderer.add_mesh(body_mesh);
-    renderer.set_draw_type(body_id, DrawType::Line);
+    renderer.set_draw_type(body_id, DrawType::Fill);
     renderer.scale_vertices(body_id, 0.05);
     renderer.move_vertices(body_id, 0.0, -1.2);
 
@@ -156,7 +162,7 @@ fn render_meshes_to_image() {
     });
 
     let head_mesh_id = renderer.add_mesh(mesh);
-    renderer.set_draw_type(head_mesh_id, DrawType::Line);
+    renderer.set_draw_type(head_mesh_id, DrawType::Fill);
     renderer.scale_vertices(head_mesh_id, 0.5);
 
     // call our draw function once since it's just a single image
@@ -164,4 +170,124 @@ fn render_meshes_to_image() {
         eprintln!("Error rendering mesh: {}", err);
         process::exit(1);
     }
+
+    render_triangles();
+}
+
+fn render_triangles() {
+    let mut renderer = TinyRendererBuilder::new()
+        .with_render_output(tga::Image::new(
+            "tga/triangles.tga",
+            WIDTH as u16,
+            HEIGHT as u16,
+            tga::ImageType::UncompressedTrueColor,
+            tga::ColorType::RGB,
+        ))
+        .with_algorithms(Algorithms::new(
+            line_alg_with_floats,
+            rasterize_triangle_scanline,
+        ))
+        .with_color(color::PURPEL)
+        .build();
+
+    // Create array to store all triangles
+    let mut triangles: Vec<Mesh> = Vec::new();
+    let mut rng = rand::thread_rng();
+
+    // Grid parameters
+    let grid_size = 4;
+    let triangle_size = 0.15; // Base size of each triangle
+    let spacing = 0.05; // Spacing between triangles
+    let total_step = triangle_size * 2.0 + spacing; // Total step between triangle centers
+
+    // Calculate starting position to center the grid
+    let start_offset = -((grid_size as f32 - 1.0) * total_step) / 2.0;
+
+    // Create 4x4 grid of triangles
+    for row in 0..grid_size {
+        for col in 0..grid_size {
+            let mut triangle: Mesh = Mesh::new();
+
+            // Calculate center position for this triangle
+            let center_x = start_offset + (col as f32) * total_step;
+            let center_y = start_offset + (row as f32) * total_step;
+
+            // Random rotation angle
+            let rotation = rng.gen_range(0.0..std::f32::consts::PI * 2.0);
+            let cos_rot = rotation.cos();
+            let sin_rot = rotation.sin();
+
+            // Random scale factors for different triangle shapes
+            let scale_x = rng.gen_range(0.8..1.4);
+            let scale_y = rng.gen_range(0.8..1.4);
+
+            // Generate random triangle vertices with different shapes
+            let vertex1_local = (
+                rng.gen_range(-0.5..0.5) * triangle_size * scale_x,
+                rng.gen_range(-0.8..-0.2) * triangle_size * scale_y,
+            );
+            let vertex2_local = (
+                rng.gen_range(0.3..0.8) * triangle_size * scale_x,
+                rng.gen_range(0.2..0.8) * triangle_size * scale_y,
+            );
+            let vertex3_local = (
+                rng.gen_range(-0.8..-0.3) * triangle_size * scale_x,
+                rng.gen_range(0.2..0.8) * triangle_size * scale_y,
+            );
+
+            // Apply rotation and translation to vertices
+            let rotate_and_translate = |local_x: f32, local_y: f32| -> (f32, f32) {
+                let rotated_x = local_x * cos_rot - local_y * sin_rot;
+                let rotated_y = local_x * sin_rot + local_y * cos_rot;
+                (center_x + rotated_x, center_y + rotated_y)
+            };
+
+            let (v1_x, v1_y) = rotate_and_translate(vertex1_local.0, vertex1_local.1);
+            let (v2_x, v2_y) = rotate_and_translate(vertex2_local.0, vertex2_local.1);
+            let (v3_x, v3_y) = rotate_and_translate(vertex3_local.0, vertex3_local.1);
+
+            // Define triangle vertices with random positions and orientations
+            triangle.vertices = vec![
+                Vec4 {
+                    x: v1_x,
+                    y: v1_y,
+                    z: 0.0,
+                    w: 1.0,
+                },
+                Vec4 {
+                    x: v2_x,
+                    y: v2_y,
+                    z: 0.0,
+                    w: 1.0,
+                },
+                Vec4 {
+                    x: v3_x,
+                    y: v3_y,
+                    z: 0.0,
+                    w: 1.0,
+                },
+            ];
+
+            // Same faces array for all triangles
+            triangle.faces = vec![vec![0, 0, 0, 1, 0, 0, 2, 0, 0]];
+
+            triangles.push(triangle);
+        }
+    }
+
+    // Add all triangles to renderer and draw them
+    let mut triangle_ids: Vec<usize> = Vec::new();
+    for triangle in triangles {
+        let tri_id: usize = renderer.add_mesh(triangle);
+        triangle_ids.push(tri_id);
+    }
+
+    // Set draw type and draw all triangles
+    for tri_id in triangle_ids {
+        renderer.set_draw_type(tri_id, DrawType::Fill);
+    }
+
+    renderer
+        .draw()
+        .unwrap_or_else(|err| panic!("Error drawing triangle: {}", err))
 }
