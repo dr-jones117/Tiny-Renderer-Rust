@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    algorithms::line_raster::bresenhams_line_map,
-    graphics::{RenderOutputCoords, RenderOutputter, color},
-};
+use crate::graphics::{RenderOutputCoords, RenderOutputter, color};
 
 pub fn rasterize_triangle<T>(
     v0: &RenderOutputCoords,
@@ -11,7 +8,6 @@ pub fn rasterize_triangle<T>(
     v2: &RenderOutputCoords,
     color: &color::RGBA,
     render_output: &mut T,
-    draw_line_alg: fn(i32, i32, i32, i32, &color::RGBA, &mut T),
 ) where
     T: RenderOutputter,
 {
@@ -49,7 +45,7 @@ pub fn rasterize_triangle<T>(
             // Check if point is inside triangle (all barycentric coordinates >= 0)
             if w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 {
                 // Draw the pixel
-                draw_line_alg(x, y, x, y, &color, render_output);
+                render_output.set(x, y, color);
             }
         }
     }
@@ -81,19 +77,78 @@ pub fn rasterize_triangle_scanline<T>(
     v2: &RenderOutputCoords,
     color: &color::RGBA,
     render_output: &mut T,
-    draw_line_alg: fn(i32, i32, i32, i32, &color::RGBA, &mut T),
 ) where
     T: RenderOutputter,
 {
     let mut y_to_xs: HashMap<i32, Vec<i32>> = HashMap::new();
-    // 'draw' all three triangles.
-    // instead of drawing them, just save every single y and x coord using bresenhams
-    // does it make sense to reuse bresenhams line alg from here?
+
     bresenhams_line_map(v0.x, v0.y, v1.x, v1.y, &mut y_to_xs);
     bresenhams_line_map(v1.x, v1.y, v2.x, v2.y, &mut y_to_xs);
     bresenhams_line_map(v2.x, v2.y, v0.x, v0.y, &mut y_to_xs);
 
     for (y, vec) in y_to_xs.iter() {
-        draw_line_alg(vec[0], *y, vec[vec.len() - 1], *y, color, render_output);
+        let mut min_x = i32::MAX;
+        let mut max_x = i32::MIN;
+
+        for &x in vec {
+            min_x = min_x.min(x);
+            max_x = max_x.max(x);
+        }
+
+        for x in min_x..max_x {
+            render_output.set(x, *y, color);
+        }
+    }
+}
+
+pub fn bresenhams_line_map(
+    x0: i32,
+    y0: i32,
+    x1: i32,
+    y1: i32,
+    y_to_xs: &mut HashMap<i32, Vec<i32>>,
+) {
+    let steep = (x1 - x0).abs() < (y1 - y0).abs();
+
+    // transpose it if it's steep
+    let (x0, y0, x1, y1) = if steep {
+        (y0, x0, y1, x1)
+    } else {
+        (x0, y0, x1, y1)
+    };
+
+    // if going right to left, we need to swap the points to go left to right
+    let (x0, y0, x1, y1) = if x0 > x1 {
+        (x1, y1, x0, y0)
+    } else {
+        (x0, y0, x1, y1)
+    };
+
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+
+    let derror = (dy * 2).abs();
+    let mut error = 0;
+    let mut y = y0;
+
+    for x in x0..=x1 {
+        if steep {
+            y_to_xs
+                .entry(x)
+                .and_modify(|x: &mut Vec<i32>| x.push(y))
+                .or_insert(vec![y]);
+        } else {
+            y_to_xs
+                .entry(y)
+                .and_modify(|y: &mut Vec<i32>| y.push(x))
+                .or_insert(vec![x]);
+        }
+
+        error += derror;
+
+        if error > dx {
+            y += if y1 > y0 { 1 } else { -1 };
+            error -= dx * 2;
+        }
     }
 }

@@ -31,7 +31,7 @@ pub const BLUE: RGBA = RGBA {
 };
 
 #[allow(dead_code)]
-pub const PURPEL: RGBA = RGBA {
+pub const PURPLE: RGBA = RGBA {
     r: 174,
     g: 50,
     b: 220,

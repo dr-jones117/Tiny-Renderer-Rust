@@ -2,14 +2,8 @@ use crate::graphics::{RenderOutputCoords, RenderOutputter, color};
 
 pub struct Algorithms<T: RenderOutputter> {
     pub draw_line_alg: fn(i32, i32, i32, i32, &color::RGBA, &mut T),
-    pub rasterize_triangle_alg: fn(
-        &RenderOutputCoords,
-        &RenderOutputCoords,
-        &RenderOutputCoords,
-        &color::RGBA,
-        &mut T,
-        fn(i32, i32, i32, i32, &color::RGBA, &mut T),
-    ),
+    pub rasterize_triangle_alg:
+        fn(&RenderOutputCoords, &RenderOutputCoords, &RenderOutputCoords, &color::RGBA, &mut T),
 }
 
 impl<T: RenderOutputter> Algorithms<T> {
@@ -21,7 +15,6 @@ impl<T: RenderOutputter> Algorithms<T> {
             &RenderOutputCoords,
             &color::RGBA,
             &mut T,
-            fn(i32, i32, i32, i32, &color::RGBA, &mut T),
         ),
     ) -> Algorithms<T> {
         Algorithms {

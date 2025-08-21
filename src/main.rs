@@ -78,7 +78,7 @@ fn render_window() {
     let mut window_renderer = TinyRendererBuilder::new()
         .with_render_output(TinyRendererWindow::new(WIDTH, HEIGHT))
         .with_target_fps(TARGET_FPS)
-        .with_color(color::PURPEL)
+        .with_color(color::PURPLE)
         .with_algorithms(Algorithms::new(bresenhams_line_alg, rasterize_triangle))
         .build();
 
@@ -187,12 +187,12 @@ fn render_triangles() {
             line_alg_with_floats,
             rasterize_triangle_scanline,
         ))
-        .with_color(color::PURPEL)
+        .with_color(color::PURPLE)
         .build();
 
     // Create array to store all triangles
     let mut triangles: Vec<Mesh> = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Grid parameters
     let grid_size = 4;
@@ -213,26 +213,26 @@ fn render_triangles() {
             let center_y = start_offset + (row as f32) * total_step;
 
             // Random rotation angle
-            let rotation = rng.gen_range(0.0..std::f32::consts::PI * 2.0);
+            let rotation = rng.random_range(0.0..std::f32::consts::PI * 2.0);
             let cos_rot = rotation.cos();
             let sin_rot = rotation.sin();
 
             // Random scale factors for different triangle shapes
-            let scale_x = rng.gen_range(0.8..1.4);
-            let scale_y = rng.gen_range(0.8..1.4);
+            let scale_x = rng.random_range(0.8..1.4);
+            let scale_y = rng.random_range(0.8..1.4);
 
             // Generate random triangle vertices with different shapes
             let vertex1_local = (
-                rng.gen_range(-0.5..0.5) * triangle_size * scale_x,
-                rng.gen_range(-0.8..-0.2) * triangle_size * scale_y,
+                rng.random_range(-0.5..0.5) * triangle_size * scale_x,
+                rng.random_range(-0.8..-0.2) * triangle_size * scale_y,
             );
             let vertex2_local = (
-                rng.gen_range(0.3..0.8) * triangle_size * scale_x,
-                rng.gen_range(0.2..0.8) * triangle_size * scale_y,
+                rng.random_range(0.3..0.8) * triangle_size * scale_x,
+                rng.random_range(0.2..0.8) * triangle_size * scale_y,
             );
             let vertex3_local = (
-                rng.gen_range(-0.8..-0.3) * triangle_size * scale_x,
-                rng.gen_range(0.2..0.8) * triangle_size * scale_y,
+                rng.random_range(-0.8..-0.3) * triangle_size * scale_x,
+                rng.random_range(0.2..0.8) * triangle_size * scale_y,
             );
 
             // Apply rotation and translation to vertices
