@@ -76,14 +76,25 @@ pub fn line_alg_with_floats<T>(
         (x0, y0, x1, y1)
     };
 
-    for x in x0..x1 {
-        let t: f64 = (x - x0) as f64 / (x1 - x0) as f64;
-        let y = (y0 as f64 + (t * (y1 - y0) as f64)) as i32;
+    let dx = x1 - x0;
+    let dy = y1 - y0;
 
+    let derror = (dy as f32 / dx as f32).abs();
+    let mut error = 0_f32;
+    let mut y = y0;
+
+    for x in x0..x1 {
         if steep {
             render_output.set(y, x, color);
         } else {
             render_output.set(x, y, color);
+        }
+
+        error += derror;
+
+        if error > 0.5 {
+            y += if y1 > y0 { 1 } else { -1 };
+            error -= 1.0;
         }
     }
 }
