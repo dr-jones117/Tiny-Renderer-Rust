@@ -1,10 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs,
-        io::{self, Read},
-        path::Path,
-    };
+    use std::fs;
 
     use tiny_renderer::{
         algorithms::{Algorithms, bresenhams_line_alg, rasterize_triangle_scanline},
@@ -17,18 +13,16 @@ mod tests {
         renderer::{DrawType, TinyRendererBuilder},
     };
 
-    #[test]
-    fn triangles() {
+    const TRIANGLE: &'static str = "./tests/output/triangle.tga";
+    const TRIANGLE_FILL: &'static str = "./tests/output/triangle_fill.tga";
+
+    const TRIANGLE_CREATED_BY_TEST: &'static str = "./tests/output/triangle_created_by_test.tga";
+    const TRIANGLE_FILL_CREATED_BY_TEST: &'static str =
+        "./tests/output/triangle_fill_created_by_test.tga";
+
+    fn create_triangle_images() {
         const WIDTH: u16 = 5000;
         const HEIGHT: u16 = 5000;
-
-        const TRIANGLE_FILE_PATH: &'static str = "./tests/output/triangle.tga";
-        const TRIANGLE_FILL_FILE_PATH: &'static str = "./tests/output/triangle_fill.tga";
-
-        const TRIANGLE_CREATED_BY_TEST: &'static str =
-            "./tests/output/triangle_created_by_test.tga";
-        const TRIANGLE_FILL_CREATED_BY_TEST: &'static str =
-            "./tests/output/triangle_fill_created_by_test.tga";
 
         let mut renderer = TinyRendererBuilder::new()
             .with_render_output(tga::Image::new(
@@ -159,7 +153,30 @@ mod tests {
         renderer.draw().unwrap_or_else(|err| {
             panic!("unable to draw filled triangles: {}", err);
         });
+    }
 
-        // let data: Vec<u8> = match fs::read("filename.bin") {}
+    #[test]
+    fn triangle_line_fill_test_success() {
+        create_triangle_images();
+
+        let expected = fs::read(TRIANGLE).unwrap_or_else(|err| {
+            panic!("Error reading {}: {}", TRIANGLE, err);
+        });
+
+        let result = fs::read(TRIANGLE_CREATED_BY_TEST).unwrap_or_else(|err| {
+            panic!("Error reading {}: {}", TRIANGLE_CREATED_BY_TEST, err);
+        });
+
+        assert_eq!(expected, result);
+
+        let expected = fs::read(TRIANGLE_FILL).unwrap_or_else(|err| {
+            panic!("Error reading {}: {}", TRIANGLE, err);
+        });
+
+        let result = fs::read(TRIANGLE_FILL_CREATED_BY_TEST).unwrap_or_else(|err| {
+            panic!("Error reading {}: {}", TRIANGLE_CREATED_BY_TEST, err);
+        });
+
+        assert_eq!(expected, result);
     }
 }
