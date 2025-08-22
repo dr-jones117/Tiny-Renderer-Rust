@@ -92,7 +92,7 @@ pub fn line_alg_with_floats<T>(
 
         error += derror;
 
-        if error > 0.5 {
+        if error >= 0.5 {
             y += if y1 > y0 { 1 } else { -1 };
             error -= 1.0;
         }

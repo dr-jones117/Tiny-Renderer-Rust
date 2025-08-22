@@ -20,10 +20,10 @@ mod tests {
     const TRIANGLE_FILL_CREATED_BY_TEST: &'static str =
         "./tests/output/triangle_fill_created_by_test.tga";
 
-    fn create_triangle_images() {
-        const WIDTH: u16 = 5000;
-        const HEIGHT: u16 = 5000;
+    const WIDTH: u16 = 5000;
+    const HEIGHT: u16 = 5000;
 
+    fn create_triangle_images() {
         let mut renderer = TinyRendererBuilder::new()
             .with_render_output(tga::Image::new(
                 TRIANGLE_CREATED_BY_TEST,
