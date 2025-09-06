@@ -19,13 +19,6 @@ impl<T: RenderOutputter> DrawingContext<T> {
         v1: &RenderOutputCoords,
         v2: &RenderOutputCoords,
     ) {
-        (self.algorithms.rasterize_triangle_alg)(
-            v0,
-            v1,
-            v2,
-            &self.color,
-            &mut self.render_output,
-            self.algorithms.draw_line_alg,
-        )
+        (self.algorithms.rasterize_triangle_alg)(v0, v1, v2, &self.color, &mut self.render_output)
     }
 }

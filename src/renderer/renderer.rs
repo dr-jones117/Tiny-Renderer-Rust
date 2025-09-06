@@ -64,6 +64,10 @@ impl<T: RenderOutputter> TinyRenderer<T> {
         self.draw_types[id] = draw_type;
     }
 
+    pub fn set_render_output(&mut self, render_output: T) {
+        self.drawing_ctx.render_output = render_output;
+    }
+
     pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
         for (i, mesh) in self.meshes.iter_mut().enumerate() {
             let mut transformed_coords: Vec<RenderOutputCoords> = Vec::new();
