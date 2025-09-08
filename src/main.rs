@@ -24,8 +24,8 @@ use crate::renderer::{DrawType, TinyRendererBuilder};
 
 static USAGE_STATEMENT: &'static str = "USAGE: tiny_renderer [run_type]";
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 800;
+const WIDTH: usize = 1000;
+const HEIGHT: usize = 1000;
 const TARGET_FPS: usize = 120;
 
 enum RunType {
@@ -57,8 +57,7 @@ impl Config {
     }
 }
 
-//TODO: Read over rasterize_triangle for a better understanding
-//TODO: fix the triangle rasterization not working on some obj meshes
+//TODO: fix the triangle rasterization not working on some obj
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args);
@@ -83,19 +82,19 @@ fn render_window() {
         .build();
 
     // load our mesh into memory
-    let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
+    let body_mesh = Mesh::from_obj_file("obj/body.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
 
     // add the mesh into the renderer, getting back it's id
     let body_id = window_renderer.add_mesh(body_mesh);
-    window_renderer.set_draw_type(body_id, DrawType::Fill);
+    window_renderer.set_draw_type(body_id, DrawType::Line);
     window_renderer.scale_vertices(body_id, 0.05);
     window_renderer.move_vertices(body_id, 0.0, 1.0);
 
     // ok, now do it again
-    let mesh = Mesh::from_obj_file("./obj/head.obj").unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file("obj/head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
@@ -105,11 +104,10 @@ fn render_window() {
     window_renderer.scale_vertices(head_mesh_id, 0.5);
 
     while window_renderer.is_open() && !window_renderer.is_key_down(minifb::Key::Escape) {
-        window_renderer.move_vertices(body_id, 0.0, -0.01);
+        window_renderer.move_vertices(body_id, 0.0, -0.04);
 
         window_renderer.clear();
 
-        // wow!
         window_renderer.draw().unwrap_or_else(|err| {
             eprintln!("Error drawing the window: {}", err);
             process::exit(1);
@@ -121,19 +119,20 @@ fn render_meshes_to_image() {
     // create a renderer with a tga image output instead of a window
     let mut renderer = TinyRendererBuilder::new()
         .with_render_output(tga::Image::new(
-            "tga/img2.tga",
-            WIDTH as u16,
-            HEIGHT as u16,
+            "tga/img.tga",
+            3000,
+            3000,
             tga::ImageType::UncompressedTrueColor,
             tga::ColorType::RGB,
         ))
+        .with_color(color::GREEN)
         .with_algorithms(Algorithms::new(
             line_alg_with_floats,
             rasterize_triangle_scanline,
         ))
         .build();
 
-    let body_mesh = Mesh::from_obj_file("./obj/body.obj").unwrap_or_else(|err| {
+    let body_mesh = Mesh::from_obj_file("obj/body.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
@@ -143,26 +142,28 @@ fn render_meshes_to_image() {
 
     // bring in more meshes!
     let body_id = renderer.add_mesh(body_mesh);
-    renderer.set_draw_type(body_id, DrawType::Fill);
+    renderer.set_draw_type(body_id, DrawType::Line);
     renderer.scale_vertices(body_id, 0.05);
     renderer.move_vertices(body_id, 0.0, -1.2);
 
     let body_id_2 = renderer.add_mesh(body_mesh_2);
+    renderer.set_draw_type(body_id_2, DrawType::Line);
     renderer.scale_vertices(body_id_2, 0.1);
     renderer.move_vertices(body_id_2, -1.0, -1.0);
 
     let body_id_3 = renderer.add_mesh(body_mesh_3);
+    renderer.set_draw_type(body_id_3, DrawType::Line);
     renderer.scale_vertices(body_id_3, 0.1);
     renderer.move_vertices(body_id_3, 1.0, -1.0);
 
     // read in a mesh from our obj file
-    let mesh = Mesh::from_obj_file("./obj/head.obj").unwrap_or_else(|err| {
+    let mesh = Mesh::from_obj_file("obj/head.obj").unwrap_or_else(|err| {
         eprintln!("Error reading in the mesh: {}", err);
         process::exit(1);
     });
 
     let head_mesh_id = renderer.add_mesh(mesh);
-    renderer.set_draw_type(head_mesh_id, DrawType::Fill);
+    renderer.set_draw_type(head_mesh_id, DrawType::Line);
     renderer.scale_vertices(head_mesh_id, 0.5);
 
     // call our draw function once since it's just a single image
@@ -284,7 +285,7 @@ fn render_triangles() {
 
     // Set draw type and draw all triangles
     for tri_id in triangle_ids {
-        renderer.set_draw_type(tri_id, DrawType::Fill);
+        renderer.set_draw_type(tri_id, DrawType::Line);
     }
 
     renderer
