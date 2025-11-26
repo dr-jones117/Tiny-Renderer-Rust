@@ -1,4 +1,4 @@
-use crate::graphics::{color, output::RenderOutputter};
+use crate::graphics::{color, output::RenderTarget};
 
 pub fn bresenhams_line_alg<T>(
     x0: i32,
@@ -8,7 +8,7 @@ pub fn bresenhams_line_alg<T>(
     color: &color::RGBA,
     render_output: &mut T,
 ) where
-    T: RenderOutputter,
+    T: RenderTarget,
 {
     let steep = (x1 - x0).abs() < (y1 - y0).abs();
 
@@ -58,7 +58,7 @@ pub fn line_alg_with_floats<T>(
     color: &color::RGBA,
     render_output: &mut T,
 ) where
-    T: RenderOutputter,
+    T: RenderTarget,
 {
     let steep = (x1 - x0).abs() < (y1 - y0).abs();
 

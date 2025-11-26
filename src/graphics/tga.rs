@@ -2,7 +2,7 @@ use std::{fs::File, io::Write, path::Path};
 
 use bytemuck::{Pod, Zeroable};
 
-use crate::graphics::{RenderOutputter, color};
+use crate::graphics::{RenderTarget, color};
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -86,7 +86,7 @@ pub struct Image {
     data: Vec<u8>,
 }
 
-impl RenderOutputter for Image {
+impl RenderTarget for Image {
     fn width(&self) -> usize {
         self.header.width as usize
     }

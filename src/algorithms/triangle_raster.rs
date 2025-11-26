@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::graphics::{PixelPos, RenderOutputter, color};
+use crate::graphics::{PixelPos, RenderTarget, color};
 
 pub fn rasterize_triangle<T>(
     v0: &PixelPos,
@@ -9,7 +9,7 @@ pub fn rasterize_triangle<T>(
     color: &color::RGBA,
     render_output: &mut T,
 ) where
-    T: RenderOutputter,
+    T: RenderTarget,
 {
     // Sort vertices by y coordinate (v0 has smallest y, v2 has largest y)
     let (v0, v1, v2) = if v1.y < v0.y {
@@ -78,7 +78,7 @@ pub fn rasterize_triangle_scanline<T>(
     color: &color::RGBA,
     render_output: &mut T,
 ) where
-    T: RenderOutputter,
+    T: RenderTarget,
 {
     let mut y_to_xs: HashMap<i32, Vec<i32>> = HashMap::new();
 

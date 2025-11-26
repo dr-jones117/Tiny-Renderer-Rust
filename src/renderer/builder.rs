@@ -1,14 +1,14 @@
 use crate::algorithms::Algorithms;
-use crate::graphics::{RenderOutputter, TinyRendererWindow, color};
+use crate::graphics::{RenderTarget, TinyRendererWindow, color};
 use crate::renderer::TinyRenderer;
 
-pub struct TinyRendererBuilder<T: RenderOutputter> {
+pub struct TinyRendererBuilder<T: RenderTarget> {
     render_output: Option<T>,
     algorithms: Option<Algorithms<T>>,
     color: Option<color::RGBA>,
 }
 
-impl<T: RenderOutputter> TinyRendererBuilder<T> {
+impl<T: RenderTarget> TinyRendererBuilder<T> {
     pub fn new() -> TinyRendererBuilder<T> {
         TinyRendererBuilder {
             render_output: None,

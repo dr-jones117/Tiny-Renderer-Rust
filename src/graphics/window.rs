@@ -1,6 +1,6 @@
 use minifb::{Key, WindowOptions};
 
-use crate::graphics::{RenderOutputter, color};
+use crate::graphics::{RenderTarget, color};
 
 pub struct TinyRendererWindow {
     width: usize,
@@ -39,7 +39,7 @@ impl TinyRendererWindow {
     }
 }
 
-impl RenderOutputter for TinyRendererWindow {
+impl RenderTarget for TinyRendererWindow {
     fn width(&self) -> usize {
         self.width
     }
@@ -61,7 +61,7 @@ impl RenderOutputter for TinyRendererWindow {
         self.buffer[(y * self.width as i32 + x) as usize] = rgba_u32;
     }
 
-    fn render(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    fn render(&mut self) -> Result<(), Box<dyn std::error::Error>> { //TODO: why do i need to flip this here? is there a better way to do this?
         let mut flipped_buffer = vec![0u32; self.buffer.len()];
 
         for y in 0..self.height {

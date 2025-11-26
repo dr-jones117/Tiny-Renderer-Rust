@@ -4,7 +4,7 @@ use minifb;
 
 use crate::algorithms::Algorithms;
 use crate::geometry::Vec4;
-use crate::graphics::{PixelPos, RenderOutputter, TinyRendererWindow, color};
+use crate::graphics::{PixelPos, RenderTarget, TinyRendererWindow, color};
 use crate::mesh::Mesh;
 use crate::renderer::DrawingContext;
 
@@ -14,13 +14,13 @@ pub enum DrawType {
     Line,
 }
 
-pub struct TinyRenderer<T: RenderOutputter> {
+pub struct TinyRenderer<T: RenderTarget> {
     meshes: Vec<Mesh>,
     draw_types: Vec<DrawType>,
     drawing_ctx: DrawingContext<T>,
 }
 
-impl<T: RenderOutputter> TinyRenderer<T> {
+impl<T: RenderTarget> TinyRenderer<T> {
     pub fn new(render_output: T, algorithms: Algorithms<T>, color: color::RGBA) -> TinyRenderer<T> {
         TinyRenderer {
             draw_types: Vec::new(),
