@@ -1,2 +1,52 @@
-/target
+# Rust build artifacts
+/target/
+**/target/
+Cargo.lock
+
+# Debug and release builds
+debug/
+release/
+
+# Generated documentation
+/doc/
+
+# Backup files
+**/*.rs.bk
+*.pdb
+
+# IDE and editor files
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Test outputs
+tests/output/*.tga
+tga/*.tga
+*.tga
+
+# Profiling and benchmarking
+perf.data
+perf.data.old
+*.profdata
+
+# Coverage reports
+*.profraw
+coverage/
+tarpaulin-report.html
+cobertura.xml
+
+# Flamegraphs and performance analysis
+flamegraph.svg
+*.svg
+
+# Temporary files
+tmp/
+temp/
+*.tmp
