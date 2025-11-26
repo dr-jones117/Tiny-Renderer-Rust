@@ -3,13 +3,32 @@ use std::fs;
 
 use crate::geometry::{Vec3, Vec4};
 
+#[derive(Debug, Clone)]
+pub struct FaceElement {
+    pub vertex_index: Option<i32>,
+    pub texture_index: Option<i32>,
+    pub normal_index: Option<i32>,
+}
+
+impl FaceElement {
+    pub fn new(vertex_index_str: &str, texture_index_str: &str, normal_index_str: &str) -> FaceElement {
+        let parse_index = |s: &str| s.parse::<i32>().ok().map(|idx| idx - 1);
+
+        FaceElement {
+            vertex_index: parse_index(vertex_index_str),
+            texture_index: parse_index(texture_index_str),
+            normal_index: parse_index(normal_index_str),
+        }
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Mesh {
     pub vertices: Vec<Vec4<f32>>,
     pub vertex_normals: Vec<Vec3<f32>>,
     pub texture_coordinates: Vec<Vec3<f32>>,
-    pub faces: Vec<Vec<i32>>,
+    pub faces: Vec<Vec<FaceElement>>,
 }
 
 impl Mesh {
@@ -28,7 +47,7 @@ impl Mesh {
         let mut vertices: Vec<Vec4<f32>> = Vec::new();
         let mut texture_coordinates: Vec<Vec3<f32>> = Vec::new();
         let mut vertex_normals: Vec<Vec3<f32>> = Vec::new();
-        let mut faces: Vec<Vec<i32>> = Vec::new();
+        let mut faces: Vec<Vec<FaceElement>> = Vec::new();
 
         for line in obj_content.lines() {
             if line.starts_with("v ") {
@@ -50,9 +69,9 @@ impl Mesh {
         })
     }
 
-    fn parse_face(line: &str) -> Result<Vec<i32>, Box<dyn Error>> {
+    fn parse_face(line: &str) -> Result<Vec<FaceElement>, Box<dyn Error>> {
         let tokens: Vec<&str> = line.split_whitespace().collect();
-        let mut face_vertices: Vec<i32> = Vec::new();
+        let mut face_vertices: Vec<FaceElement> = Vec::new();
 
         for token in tokens {
             if token.starts_with("f") {
@@ -63,14 +82,17 @@ impl Mesh {
             }
 
             let indice: Vec<&str> = token.split("/").collect();
-            for value in indice {
-                if let Ok(mut idx) = value.parse::<i32>() {
-                    idx -= 1;
-                    face_vertices.push(idx);
-                } else {
-                    face_vertices.push(0);
-                }
+            
+            // OBJ format supports: v, v/vt, v/vt/vn, v//vn
+            if indice.is_empty() || indice.len() > 3 {
+                return Err(format!("Invalid face format: expected 1-3 indices, got {}", indice.len()).into());
             }
+
+            let vertex_idx = indice.get(0).copied().unwrap_or("");
+            let texture_idx = indice.get(1).copied().unwrap_or("");
+            let normal_idx = indice.get(2).copied().unwrap_or("");
+
+            face_vertices.push(FaceElement::new(vertex_idx, texture_idx, normal_idx));
         }
 
         Ok(face_vertices)

@@ -18,7 +18,7 @@ use crate::geometry::Vec4;
 use crate::graphics::color;
 use crate::graphics::{TinyRendererWindow, tga};
 
-use crate::mesh::Mesh;
+use crate::mesh::{FaceElement, Mesh};
 
 use crate::renderer::{DrawType, TinyRendererBuilder};
 
@@ -270,7 +270,23 @@ fn render_triangles() {
             ];
 
             // Same faces array for all triangles
-            triangle.faces = vec![vec![0, 0, 0, 1, 0, 0, 2, 0, 0]];
+            triangle.faces = vec![vec![
+                FaceElement {
+                    vertex_index: Some(0),
+                    texture_index: Some(0),
+                    normal_index: Some(0),
+                },
+                FaceElement {
+                    vertex_index: Some(1),
+                    texture_index: Some(0),
+                    normal_index: Some(0),
+                },
+                FaceElement {
+                    vertex_index: Some(2),
+                    texture_index: Some(0),
+                    normal_index: Some(0),
+                },
+            ]];
 
             triangles.push(triangle);
         }

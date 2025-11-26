@@ -9,7 +9,7 @@ mod tests {
             color,
             tga::{self, ColorType, ImageType},
         },
-        mesh::Mesh,
+        mesh::{FaceElement, Mesh},
         renderer::{DrawType, TinyRendererBuilder},
     };
 
@@ -127,7 +127,23 @@ mod tests {
 
         let mut mesh_ids = Vec::new();
         for mut mesh in triangle_meshes {
-            mesh.faces = vec![vec![0, 0, 0, 1, 0, 0, 2, 0, 0]];
+            mesh.faces = vec![vec![
+                FaceElement {
+                    vertex_index: Some(0),
+                    texture_index: Some(0),
+                    normal_index: Some(0),
+                },
+                FaceElement {
+                    vertex_index: Some(1),
+                    texture_index: Some(0),
+                    normal_index: Some(0),
+                },
+                FaceElement {
+                    vertex_index: Some(2),
+                    texture_index: Some(0),
+                    normal_index: Some(0),
+                },
+            ]];
 
             let id = renderer.add_mesh(mesh);
             mesh_ids.push(id);

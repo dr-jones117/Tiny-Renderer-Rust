@@ -3,7 +3,7 @@ use std::error::Error;
 use crate::graphics::color;
 
 #[derive(Debug)]
-pub struct RenderOutputCoords {
+pub struct PixelPos {
     pub x: i32,
     pub y: i32,
 }

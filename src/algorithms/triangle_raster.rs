@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use crate::graphics::{RenderOutputCoords, RenderOutputter, color};
+use crate::graphics::{PixelPos, RenderOutputter, color};
 
 pub fn rasterize_triangle<T>(
-    v0: &RenderOutputCoords,
-    v1: &RenderOutputCoords,
-    v2: &RenderOutputCoords,
+    v0: &PixelPos,
+    v1: &PixelPos,
+    v2: &PixelPos,
     color: &color::RGBA,
     render_output: &mut T,
 ) where
@@ -37,7 +37,7 @@ pub fn rasterize_triangle<T>(
     // Rasterize using barycentric coordinates
     for y in min_y..=max_y {
         for x in min_x..=max_x {
-            let p = RenderOutputCoords { x, y };
+            let p = PixelPos { x, y };
 
             // Calculate barycentric coordinates
             let (w0, w1, w2) = barycentric_coords(&p, v0, v1, v2);
@@ -52,10 +52,10 @@ pub fn rasterize_triangle<T>(
 }
 
 fn barycentric_coords(
-    p: &RenderOutputCoords,
-    v0: &RenderOutputCoords,
-    v1: &RenderOutputCoords,
-    v2: &RenderOutputCoords,
+    p: &PixelPos,
+    v0: &PixelPos,
+    v1: &PixelPos,
+    v2: &PixelPos,
 ) -> (f32, f32, f32) {
     let denom = ((v1.y - v2.y) * (v0.x - v2.x) + (v2.x - v1.x) * (v0.y - v2.y)) as f32;
 
@@ -72,9 +72,9 @@ fn barycentric_coords(
 }
 
 pub fn rasterize_triangle_scanline<T>(
-    v0: &RenderOutputCoords,
-    v1: &RenderOutputCoords,
-    v2: &RenderOutputCoords,
+    v0: &PixelPos,
+    v1: &PixelPos,
+    v2: &PixelPos,
     color: &color::RGBA,
     render_output: &mut T,
 ) where

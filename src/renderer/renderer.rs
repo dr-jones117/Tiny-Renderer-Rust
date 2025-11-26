@@ -4,7 +4,7 @@ use minifb;
 
 use crate::algorithms::Algorithms;
 use crate::geometry::Vec4;
-use crate::graphics::{RenderOutputCoords, RenderOutputter, TinyRendererWindow, color};
+use crate::graphics::{PixelPos, RenderOutputter, TinyRendererWindow, color};
 use crate::mesh::Mesh;
 use crate::renderer::DrawingContext;
 
@@ -70,22 +70,30 @@ impl<T: RenderOutputter> TinyRenderer<T> {
 
     pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
         for (i, mesh) in self.meshes.iter_mut().enumerate() {
-            let mut transformed_coords: Vec<RenderOutputCoords> = Vec::new();
+            let mut screen_space_coordinates: Vec<PixelPos> = Vec::new();
 
             for vertice in mesh.vertices.iter() {
-                transformed_coords.push(world_to_output_coordinates(
-                    self.drawing_ctx.render_output.width(),
-                    self.drawing_ctx.render_output.height(),
-                    vertice,
-                ))
+                screen_space_coordinates.push(
+                    world_to_screen_space(
+                        self.drawing_ctx.render_output.width(),
+                        self.drawing_ctx.render_output.height(),
+                        vertice,
+                    )
+                )
             }
 
-            for face_index in 0..mesh.faces.len() {
-                let face: &Vec<i32> = &mesh.faces[face_index];
+            for face in &mesh.faces {
+                let get_screen_space_coordinate = |idx: Option<i32>| -> Result<&PixelPos, Box<dyn Error>> {
+                    idx.ok_or("Face missing vertex index")?
+                        .try_into()
+                        .ok()
+                        .and_then(|i: usize| screen_space_coordinates.get(i))
+                        .ok_or_else(|| "Invalid vertex index".into())
+                };
 
-                let v0 = &transformed_coords[face[0] as usize];
-                let v1 = &transformed_coords[face[3] as usize];
-                let v2 = &transformed_coords[face[6] as usize];
+                let v0 = get_screen_space_coordinate(face[0].vertex_index)?;
+                let v1 = get_screen_space_coordinate(face[1].vertex_index)?;
+                let v2 = get_screen_space_coordinate(face[2].vertex_index)?;
 
                 match &self.draw_types[i] {
                     DrawType::Fill => self.drawing_ctx.rasterize_triangle(v0, v1, v2),
@@ -123,13 +131,13 @@ impl TinyRenderer<TinyRendererWindow> {
     }
 }
 
-fn world_to_output_coordinates(
+fn world_to_screen_space(
     width: usize,
     height: usize,
-    world_coords: &Vec4<f32>,
-) -> RenderOutputCoords {
-    RenderOutputCoords {
-        x: ((world_coords.x + 1.0) * width as f32 / 2.0) as i32,
-        y: ((world_coords.y + 1.0) * height as f32 / 2.0) as i32,
+    world_coordinates: &Vec4<f32>,
+) -> PixelPos {
+    PixelPos {
+        x: ((world_coordinates.x + 1.0) * width as f32 / 2.0) as i32,
+        y: ((world_coordinates.y + 1.0) * height as f32 / 2.0) as i32,
     }
 }

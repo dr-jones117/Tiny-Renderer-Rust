@@ -1,6 +1,6 @@
 use crate::{
     algorithms::Algorithms,
-    graphics::{RenderOutputCoords, RenderOutputter, color},
+    graphics::{PixelPos, RenderOutputter, color},
 };
 
 pub struct DrawingContext<T: RenderOutputter> {
@@ -15,9 +15,9 @@ impl<T: RenderOutputter> DrawingContext<T> {
     }
     pub fn rasterize_triangle(
         &mut self,
-        v0: &RenderOutputCoords,
-        v1: &RenderOutputCoords,
-        v2: &RenderOutputCoords,
+        v0: &PixelPos,
+        v1: &PixelPos,
+        v2: &PixelPos,
     ) {
         (self.algorithms.rasterize_triangle_alg)(v0, v1, v2, &self.color, &mut self.render_output)
     }
